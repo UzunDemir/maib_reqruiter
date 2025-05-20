@@ -11,6 +11,8 @@ from sklearn.feature_extraction.text import TfidfVectorizer
 from sklearn.metrics.pairwise import cosine_similarity
 import numpy as np
 import docx
+from docx import Document
+import io
 
 from concurrent.futures import ThreadPoolExecutor
 
@@ -651,13 +653,50 @@ if st.session_state.interview_started:
         st.markdown("## 📌 Profilul candidatului")
         st.markdown(st.session_state.profile)
         
-        # Кнопка скачивания
-        st.download_button(
-            label="💾 Descarcă profilul",
-            data=st.session_state.profile,
-            file_name="candidate_profile.md",
-            mime="text/markdown"
-        )
+        # # Кнопка скачивания
+        # st.download_button(
+        #     label="💾 Descarcă profilul",
+        #     data=st.session_state.profile,
+        #     file_name="candidate_profile.md",
+        #     mime="text/markdown"
+        # )
+
+
+        # Crează un document Word
+        def create_word_document(profile_text):
+            doc = Document()
+            
+            # Adaugă titlu
+            doc.add_heading('Profil Candidat', 0)
+            
+            # Procesează textul și adaugă paragrafe
+            for line in profile_text.split('\n'):
+                if line.strip():  # Ignoră liniile goale
+                    if line.startswith('###'):
+                        doc.add_heading(line.replace('###', '').strip(), level=2)
+                    elif line.startswith('##'):
+                        doc.add_heading(line.replace('##', '').strip(), level=1)
+                    else:
+                        doc.add_paragraph(line)
+            
+            return doc
+        
+        # Butonul de descărcare DOCX
+        if st.session_state.profile:
+            doc = create_word_document(st.session_state.profile)
+            
+            # Salvează în buffer binar
+            bio = io.BytesIO()
+            doc.save(bio)
+            
+            st.download_button(
+                label="💾 Descarcă profilul (DOCX)",
+                data=bio.getvalue(),
+                file_name="profil_candidat.docx",
+                mime="application/vnd.openxmlformats-officedocument.wordprocessingml.document"
+            )
+
+
         
         # Кнопка начать заново
         if st.button("🔄 Susține interviul din nou"):
