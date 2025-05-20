@@ -10,6 +10,13 @@ from transformers import AutoTokenizer
 import numpy as np
 from sklearn.feature_extraction.text import TfidfVectorizer
 from sklearn.metrics.pairwise import cosine_similarity
+
+from bs4 import BeautifulSoup
+from urllib.parse import urljoin
+import time
+import json
+
+
 st.set_page_config(layout="wide", initial_sidebar_state="expanded")
 # Инициализация токенизатора
 #tokenizer = AutoTokenizer.from_pretrained("deepseek-ai/deepseek-llm")
@@ -248,7 +255,7 @@ from urllib.parse import urljoin
 import time
 import json
 
-st.title("Парсер вакансий Moldova Agroindbank с rabota.md")
+#st.title("Парсер вакансий Moldova Agroindbank с rabota.md")
 
 headers = {
     'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64)'
