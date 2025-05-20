@@ -51,7 +51,9 @@ st.markdown("""
         display: none !important; 
     }
     .sidebar .sidebar-content {
-        background-color: #E6F4E6; /* светло-салатовый фон */
+         background-color: #E6F4E6; /* светло-салатовый фон */
+    }
+
     }
     .block-container {
         padding-top: 1rem;
