@@ -470,7 +470,7 @@ if "knowledge_base" not in st.session_state:
 # ]
 
 # 🔹 Интерфейс загрузки
-st.title("📄 Analizator CV & Potrivire Posturi")
+# st.title("📄 Analizator CV & Potrivire Posturi")
 uploaded_files = st.file_uploader(
     "Încarcă CV-ul tău (PDF, DOCX, TXT)", 
     type=["pdf", "docx", "txt"], 
