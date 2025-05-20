@@ -411,17 +411,31 @@ try:
         vac = vacancies[idx]
         score = normalized_scores[idx]
 
+        # with st.container():
+        #     st.markdown(f"""
+        #     <div class="match-card">
+        #         <div class="match-header">
+        #             <h3>{vac['title']}</h3>
+        #             <h4>{score:.0f}% potrivire</h4>
+        #         </div>
+        #         <div class="progress-bar">
+        #             <div class="progress-fill" style="width: {score}%"></div>
+        #         </div>
+        #         <p><a href="{vac['url']}" target="_blank">🔗 Vezi oferta completă</a></p>
+        #     </div>
+        #     """, unsafe_allow_html=True)
         with st.container():
+                      
             st.markdown(f"""
             <div class="match-card">
                 <div class="match-header">
-                    <h3>{vac['title']}</h3>
+                    <h3><a href="{vac['url']}" target="_blank" style="text-decoration:none; color:inherit;">{vac['title']}</a></h3>
                     <h4>{score:.0f}% potrivire</h4>
                 </div>
                 <div class="progress-bar">
                     <div class="progress-fill" style="width: {score}%"></div>
                 </div>
-                <p><a href="{vac['url']}" target="_blank">🔗 Vezi oferta completă</a></p>
+                <!-- <p><a href="{vac['url']}" target="_blank">🔗 Vezi oferta completă</a></p> удалено -->
             </div>
             """, unsafe_allow_html=True)
 
