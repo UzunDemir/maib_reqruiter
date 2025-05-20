@@ -20,10 +20,12 @@ tokenizer = GPT2Tokenizer.from_pretrained("gpt2")
 
 st.set_page_config(layout="wide", initial_sidebar_state="expanded")
 
-# Настройка логотипа
-#st.sidebar.image("https://www.maib.md/uploads/custom_blocks/image_1633004921_8nR1jw3Qfu_auto__0.png", use_container_width=True)
+st.set_page_config(layout="wide", initial_sidebar_state="expanded")
 
-# Кастомизация через HTML+JS для боковой панели
+# Настройка логотипа
+# st.sidebar.image("https://www.maib.md/uploads/custom_blocks/image_1633004921_8nR1jw3Qfu_auto__0.png", use_container_width=True)
+
+# Кастомизация через HTML+JS для боковой панели + скрытие верхнего меню, футера и хедера
 st.markdown("""
     <style>
         /* Сайдбар целиком */
@@ -44,8 +46,14 @@ st.markdown("""
         .sidebar-text {
             color: white;
         }
+
+        /* Скрываем верхнее меню, футер и хедер Streamlit */
+        #MainMenu, footer, header {
+            display: none !important;
+        }
     </style>
 """, unsafe_allow_html=True)
+
 
 # Текст в сайдбаре
 st.sidebar.markdown('<div class="sidebar-title">Proiect: AI Recruiter pentru MAIB</div>', unsafe_allow_html=True)
