@@ -343,22 +343,70 @@ vectorizer = TfidfVectorizer(
     max_features=5000
 )
 
+# try:
+#     with st.spinner("Se analizează potrivirile..."):
+#         tfidf_matrix = vectorizer.fit_transform(documents)
+#         similarity_scores = cosine_similarity(tfidf_matrix[0:1], tfidf_matrix[1:]).flatten()
+    
+#     # Normalizează scorurile între 0 și 100 pentru o afișare mai bună
+#     normalized_scores = (similarity_scores - similarity_scores.min()) / (similarity_scores.max() - similarity_scores.min()) * 100
+#     normalized_scores = np.clip(normalized_scores, 0, 100)
+    
+#     # Obține top 3 oferte
+#     top_indices = similarity_scores.argsort()[::-1][:3]
+    
+#     for idx in top_indices:
+#         vac = vacancies[idx]
+#         score = normalized_scores[idx]
+        
+#         with st.container():
+#             st.markdown(f"""
+#             <div class="match-card">
+#                 <div class="match-header">
+#                     <h3>{vac['title']}</h3>
+#                     <h4>{score:.0f}% potrivire</h4>
+#                 </div>
+#                 <div class="progress-bar">
+#                     <div class="progress-fill" style="width: {score}%"></div>
+#                 </div>
+#                 <p><a href="{vac['url']}" target="_blank">🔗 Vezi oferta completă</a></p>
+#             </div>
+#             """, unsafe_allow_html=True)
+            
+#             with st.expander("📝 Detalii despre ofertă"):
+#                 st.write(vac['description'])
+                
+#             st.write("---")
+
+# except Exception as e:
+#     st.error(f"Eroare la analiza potrivirilor: {str(e)}")
+
+import numpy as np
+from sklearn.feature_extraction.text import TfidfVectorizer
+from sklearn.metrics.pairwise import cosine_similarity
+import streamlit as st
+
 try:
     with st.spinner("Se analizează potrivirile..."):
+        vectorizer = TfidfVectorizer()
         tfidf_matrix = vectorizer.fit_transform(documents)
         similarity_scores = cosine_similarity(tfidf_matrix[0:1], tfidf_matrix[1:]).flatten()
-    
-    # Normalizează scorurile între 0 și 100 pentru o afișare mai bună
-    normalized_scores = (similarity_scores - similarity_scores.min()) / (similarity_scores.max() - similarity_scores.min()) * 100
+
+    # Защита от деления на 0
+    score_min, score_max = similarity_scores.min(), similarity_scores.max()
+    if score_max - score_min > 0:
+        normalized_scores = (similarity_scores - score_min) / (score_max - score_min) * 100
+    else:
+        normalized_scores = np.zeros_like(similarity_scores)
+
     normalized_scores = np.clip(normalized_scores, 0, 100)
-    
-    # Obține top 3 oferte
+
     top_indices = similarity_scores.argsort()[::-1][:3]
-    
+
     for idx in top_indices:
         vac = vacancies[idx]
         score = normalized_scores[idx]
-        
+
         with st.container():
             st.markdown(f"""
             <div class="match-card">
@@ -372,11 +420,12 @@ try:
                 <p><a href="{vac['url']}" target="_blank">🔗 Vezi oferta completă</a></p>
             </div>
             """, unsafe_allow_html=True)
-            
+
             with st.expander("📝 Detalii despre ofertă"):
                 st.write(vac['description'])
-                
+
             st.write("---")
 
 except Exception as e:
     st.error(f"Eroare la analiza potrivirilor: {str(e)}")
+
