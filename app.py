@@ -321,7 +321,7 @@ if st.button("Încarcă ofertele de muncă de pe rabota.md"):
 
 
 
-# Загрузка документов
+# Загрузка CV
 uploaded_files = st.file_uploader("Încarcă CV-ul tău în format PDF", type="pdf", accept_multiple_files=True)
 if uploaded_files:
     for uploaded_file in uploaded_files:
@@ -330,83 +330,61 @@ if uploaded_files:
             if success:
                 st.success(f"Fișierul {uploaded_file.name} a fost încărcat cu succes!")
 
-# Отображение загруженных документов
-if st.session_state.knowledge_base.get_document_names():
-    st.subheader("📚 Загруженные документы:")
-    for doc in st.session_state.knowledge_base.get_document_names():
-        st.markdown(f"- {doc}")
-else:
-    st.info("ℹ️ Документы не загружены")
+if not st.session_state.knowledge_base.get_document_names():
+    st.info("ℹ️ Încarcă CV-ul pentru a continua analiza.")
+    st.stop()
 
-# Отображение истории сообщений
-for message in st.session_state.messages:
-    with st.chat_message(message["role"]):
-        st.markdown(message["content"])
+# Анализ posturilor potrivite
+st.subheader("🔎 Identificăm posturile potrivite pentru tine...")
 
-# Ввод вопроса
-if prompt := st.chat_input("Введите ваш вопрос..."):
-    st.session_state.messages.append({"role": "user", "content": prompt})
-    with st.chat_message("user"):
-        st.markdown(prompt)
-    
-    # Поиск наиболее релевантных чанков
-    relevant_chunks = st.session_state.knowledge_base.find_most_relevant_chunks(prompt)
-    
-    if not relevant_chunks:
-        response_text = "Ответ не найден в материалах ❌"
-        st.session_state.messages.append({"role": "assistant", "content": response_text})
-        with st.chat_message("assistant"):
-            st.markdown(response_text)
-    else:
-        # Формируем контекст из релевантных чанков
-        context = "\n\n".join([f"Документ: {doc_name}, страница {page_num}\n{text}" 
-                             for text, doc_name, page_num in relevant_chunks])
-        
-        full_prompt = f"""Answer strictly based on the educational materials provided below.
-     Respond in the same language the question is written in.
-     If the answer is not found in the materials, reply with: 'Answer not found in the materials'.
-    
-    
-        
-        educational materials: {prompt}
-        
-        relevant materials:
-        {context}"""
-        
-        data = {
-            "model": "deepseek-chat",
-            "messages": [{"role": "user", "content": full_prompt}],
-            "max_tokens": 2000,
-            "temperature": 0.1  # Уменьшаем случайность ответов
-        }
-        
-        with st.spinner("Ищем ответ..."):
-            start_time = datetime.now()
-            
-            try:
-                response = requests.post(url, headers=headers, json=data)
-                
-                if response.status_code == 200:
-                    response_data = response.json()
-                    full_response = response_data['choices'][0]['message']['content']
-                    
-                    # Добавляем ссылки на источники
-                    sources = "\n\nИсточники:\n" + "\n".join(
-                        [f"- {doc_name}, стр. {page_num}" for _, doc_name, page_num in relevant_chunks]
-                    )
-                    full_response += sources
-                    
-                    st.session_state.messages.append({"role": "assistant", "content": full_response})
-                    with st.chat_message("assistant"):
-                        st.markdown(full_response + " ✅")
-                    
-                    end_time = datetime.now()
-                    duration = (end_time - start_time).total_seconds()
-                    st.info(f"⏱️ Поиск ответа занял {duration:.2f} секунд")
-                else:
-                    st.error(f"Ошибка API: {response.status_code} - {response.text}")
-            except Exception as e:
-                st.error(f"Произошла ошибка: {str(e)}")
+# Получаем top-3 вакансии, релевантные содержимому CV
+cv_text = "\n\n".join([chunk.text for chunk in st.session_state.knowledge_base.chunks])
+top_k = 3
+vacancy_texts = [f"{v['title']} {v['description']}" for v in vacancies_data]
+vectorizer = TfidfVectorizer(stop_words='english')
+matrix = vectorizer.fit_transform([cv_text] + vacancy_texts)
+similarities = cosine_similarity(matrix[0:1], matrix[1:])[0]
+top_indices = np.argsort(similarities)[-top_k:][::-1]
+
+# Показываем top-3 вакансии
+st.subheader("🏆 Top 3 posturi relevante")
+for i, idx in enumerate(top_indices):
+    vacancy = vacancies_data[idx]
+    st.markdown(f"### {i+1}. [{vacancy['title']}]({vacancy['url']})")
+    st.markdown(vacancy['description'])
+
+# Анализ самой релевантной вакансии
+best_vacancy = vacancies_data[top_indices[0]]
+context = f"CV-ul candidatului:\n{cv_text[:3000]}...\n\nPostul:\n{best_vacancy['title']} - {best_vacancy['description']}"
+
+prompt_analysis = f"""
+Evaluează compatibilitatea dintre CV-ul candidatului și acest post.
+- Identifică punctele forte (ce se potrivește bine).
+- Menționează ce competențe lipsesc sau sunt slabe.
+Răspunde în limba română.
+""".strip()
+
+data = {
+    "model": "deepseek-chat",
+    "messages": [
+        {"role": "user", "content": prompt_analysis},
+        {"role": "user", "content": context}
+    ],
+    "max_tokens": 1000,
+    "temperature": 0.2
+}
+
+st.subheader("🔍 Analiza celei mai relevante poziții")
+with st.spinner("Se generează analiza..."):
+    try:
+        response = requests.post(url, headers=headers, json=data)
+        if response.status_code == 200:
+            answer = response.json()['choices'][0]['message']['content']
+            st.markdown(answer + " ✅")
+        else:
+            st.error(f"❌ Eroare API: {response.status_code} - {response.text}")
+    except Exception as e:
+        st.error(f"❌ A apărut o eroare: {e}")
 
 # Кнопка очистки чата
 if st.button("Очистить чат"):
