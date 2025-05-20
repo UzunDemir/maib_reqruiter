@@ -247,61 +247,65 @@ from bs4 import BeautifulSoup
 import time
 import json
 
+st.title("Парсер вакансий MAIB")
+
 headers = {
     'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64)'
 }
 
-def fetch_vacancies(urls):
-    vacancies_data = []
-    progress_bar = st.progress(0)
-    status_text = st.empty()
-
-    for i, url in enumerate(urls):
-        try:
-            response = requests.get(url, headers=headers)
-            response.raise_for_status()
-            soup = BeautifulSoup(response.text, 'html.parser')
-
-            title_tag = soup.find('h1')
-            title = title_tag.get_text(strip=True) if title_tag else 'Не найдено'
-
-            vacancy_content = soup.find('div', class_='vacancy-content')
-            description = vacancy_content.get_text(separator='\n', strip=True) if vacancy_content else 'Описание не найдено'
-
-            vacancies_data.append({
-                'url': url,
-                'title': title,
-                'description': description
-            })
-
-            status_text.text(f"[{i+1}/{len(urls)}] Сохранена вакансия: {title}")
-            progress_bar.progress((i + 1) / len(urls))
-
-            time.sleep(0.5)  # маленькая пауза, чтобы не перегружать сервер
-
-        except requests.exceptions.RequestException as e:
-            status_text.text(f"Ошибка сети при обработке {url}: {e}")
-        except Exception as e:
-            status_text.text(f"Ошибка при обработке {url}: {e}")
-
-    status_text.text("Загрузка вакансий завершена!")
-    progress_bar.empty()
-
-    return vacancies_data
-
-# Пример использования в Streamlit:
-st.title("Парсер вакансий MAIB")
+# Ввод ссылок вакансий или загрузка из текстового поля (для примера)
+urls_text = st.text_area("Вставьте ссылки вакансий (по одной в строке):")
 
 if st.button("Загрузить вакансии"):
-    # urls нужно получить заранее (например, тоже парсить или хранить)
-    urls = [...]  # твой список ссылок вакансий
-    data = fetch_vacancies(urls)
+    if not urls_text.strip():
+        st.warning("Пожалуйста, введите хотя бы одну ссылку.")
+    else:
+        urls = urls_text.strip().split('\n')
+        vacancies_data = []
 
-    st.write(f"Найдено вакансий: {len(data)}")
-    for vacancy in data:
-        st.subheader(vacancy['title'])
-        st.write(vacancy['description'])
-        st.write(f"[Ссылка]({vacancy['url']})")
+        progress_bar = st.progress(0)
+        status_text = st.empty()
+
+        for i, url in enumerate(urls):
+            try:
+                response = requests.get(url.strip(), headers=headers)
+                response.raise_for_status()
+                soup = BeautifulSoup(response.text, 'html.parser')
+
+                title_tag = soup.find('h1')
+                title = title_tag.get_text(strip=True) if title_tag else 'Не найдено'
+
+                vacancy_content = soup.find('div', class_='vacancy-content')
+                description = vacancy_content.get_text(separator='\n', strip=True) if vacancy_content else 'Описание не найдено'
+
+                vacancies_data.append({
+                    'url': url,
+                    'title': title,
+                    'description': description
+                })
+
+                status_text.text(f"[{i+1}/{len(urls)}] Сохранена вакансия: {title}")
+
+                progress_bar.progress((i + 1) / len(urls))
+                time.sleep(1)  # пауза для уважения сервера
+
+            except requests.exceptions.RequestException as e:
+                st.error(f"Ошибка сети при обработке {url}: {e}")
+            except Exception as e:
+                st.error(f"Ошибка при обработке {url}: {e}")
+
+        st.success(f"Загрузка вакансий завершена! Найдено вакансий: {len(vacancies_data)}")
+
+        # Вывод результатов
+        for vacancy in vacancies_data:
+            st.subheader(vacancy['title'])
+            st.write(vacancy['description'])
+            st.markdown(f"[Ссылка на вакансию]({vacancy['url']})")
+
+        # Возможность скачать результаты
+        json_data = json.dumps(vacancies_data, ensure_ascii=False, indent=4)
+        st.download_button("Скачать вакансии в JSON", data=json_data, file_name="vacancies.json", mime="application/json")
+
 #################################################################
 
 
