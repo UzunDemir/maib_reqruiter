@@ -308,30 +308,30 @@ else:
 
 ######################
 
+
 import streamlit as st
 import requests
-
-# Инициализация API ключа
-api_key = st.secrets.get("DEEPSEEK_API_KEY")
-if not api_key:
-    st.error("API ключ не настроен. Пожалуйста, добавьте его в Secrets.")
-    st.stop()
+from requests.exceptions import RequestException
 
 # Конфигурация API
-url = "https://api.deepseek.com/v1/chat/completions"
-headers = {
-    "Authorization": f"Bearer {api_key}",
-    "Content-Type": "application/json"
-}
+API_URL = "https://api.deepseek.com/v1/chat/completions"
+API_TIMEOUT = 30  # Увеличили таймаут до 30 секунд
+MAX_RETRIES = 3  # Количество попыток повтора
 
 def analyze_match(cv_text: str, vacancy_text: str) -> tuple[list[str], list[str]]:
     """
-    Анализирует соответствие резюме вакансии за один запрос к API
-    Возвращает списки сильных и слабых соответствий
+    Улучшенная версия с повторами при таймаутах и обработкой ошибок
     """
-    if not cv_text or not vacancy_text:
+    api_key = st.secrets.get("DEEPSEEK_API_KEY")
+    if not api_key:
+        st.error("API ключ не настроен")
         return [], []
-    
+
+    headers = {
+        "Authorization": f"Bearer {api_key}",
+        "Content-Type": "application/json"
+    }
+
     prompt = f"""
     Ты профессиональный HR-аналитик. Проанализируй соответствие резюме вакансии.
     На выходе предоставь два списка: сильные соответствия и пробелы.
@@ -376,58 +376,162 @@ def analyze_match(cv_text: str, vacancy_text: str) -> tuple[list[str], list[str]
         
         result = response.json()['choices'][0]['message']['content']
         return parse_response(result)
-        
-    except Exception as e:
-        st.error(f"Ошибка анализа: {str(e)}")
-        return [], []
 
-def parse_response(text: str) -> tuple[list[str], list[str]]:
-    """Парсит структурированный ответ от модели"""
-    strong_points = []
-    weak_points = []
-    
-    current_section = None
-    
-    for line in text.split('\n'):
-        line = line.strip()
-        if not line:
+    for attempt in range(MAX_RETRIES):
+        try:
+            response = requests.post(
+                API_URL,
+                headers=headers,
+                json={
+                    "model": "deepseek-chat",
+                    "messages": [
+                        {"role": "system", "content": "Ты HR-эксперт..."},
+                        {"role": "user", "content": prompt}
+                    ],
+                    "temperature": 0.3,
+                    "max_tokens": 1000
+                },
+                timeout=API_TIMEOUT
+            )
+            response.raise_for_status()
+            return parse_response(response.json()['choices'][0]['message']['content'])
+
+        except requests.exceptions.Timeout:
+            if attempt == MAX_RETRIES - 1:
+                st.error("Сервер не отвечает. Попробуйте позже")
+                return [], []
+            st.warning(f"Таймаут запроса. Попытка {attempt + 1}/{MAX_RETRIES}...")
             continue
-            
-        if "СИЛЬНЫЕ СТОРОНЫ:" in line:
-            current_section = "strong"
-        elif "ПРОБЕЛЫ:" in line:
-            current_section = "weak"
-        elif line.startswith('-'):
-            if current_section == "strong":
-                strong_points.append(line[1:].strip())
-            elif current_section == "weak":
-                weak_points.append(line[1:].strip())
-    
-    return strong_points, weak_points
 
-# Интерфейс
-if 'vacancies_data' in st.session_state and st.session_state.vacancies_data:
-    cv_text = st.session_state.knowledge_base.get_all_text()
-    best_vacancy = st.session_state.vacancies_data[0]
-    vacancy_text = best_vacancy.get('description', best_vacancy.get('title', ''))
+        except RequestException as e:
+            st.error(f"Ошибка API: {str(e)}")
+            return [], []
+
+    return [], []
+
+
+
+
+# import streamlit as st
+# import requests
+
+# # Инициализация API ключа
+# api_key = st.secrets.get("DEEPSEEK_API_KEY")
+# if not api_key:
+#     st.error("API ключ не настроен. Пожалуйста, добавьте его в Secrets.")
+#     st.stop()
+
+# # Конфигурация API
+# url = "https://api.deepseek.com/v1/chat/completions"
+# headers = {
+#     "Authorization": f"Bearer {api_key}",
+#     "Content-Type": "application/json"
+# }
+
+# def analyze_match(cv_text: str, vacancy_text: str) -> tuple[list[str], list[str]]:
+#     """
+#     Анализирует соответствие резюме вакансии за один запрос к API
+#     Возвращает списки сильных и слабых соответствий
+#     """
+#     if not cv_text or not vacancy_text:
+#         return [], []
     
-    with st.spinner("🔍 Анализируем ваше резюме..."):
-        strong_points, weak_points = analyze_match(cv_text, vacancy_text)
+#     prompt = f"""
+#     Ты профессиональный HR-аналитик. Проанализируй соответствие резюме вакансии.
+#     На выходе предоставь два списка: сильные соответствия и пробелы.
+
+#     ТРЕБОВАНИЯ ВАКАНСИИ:
+#     {vacancy_text}
+
+#     ТЕКСТ РЕЗЮМЕ:
+#     {cv_text}
+
+#     Проанализируй и составь:
+#     1. Список ключевых требований вакансии, которые полностью или хорошо отражены в резюме (сильные стороны)
+#     2. Список требований, которые отсутствуют или слабо отражены (пробелы)
+
+#     ВАЖНО:
+#     - Будь конкретен, цитируй фразы из резюме и требований
+#     - Указывай только релевантные пункты
+#     - Формат ответа (строго соблюдай):
     
-    st.divider()
+#     СИЛЬНЫЕ СТОРОНЫ:
+#     - Пункт 1
+#     - Пункт 2
     
-    if strong_points:
-        st.markdown("### 💪 Сильные соответствия")
-        for point in strong_points:
-            st.markdown(f"- {point}")
-    else:
-        st.markdown("### ℹ️ Не найдено явных сильных соответствий")
+#     ПРОБЕЛЫ:
+#     - Пункт 1
+#     - Пункт 2
+#     """
     
-    st.divider()
+#     try:
+#         data = {
+#             "model": "deepseek-chat",
+#             "messages": [
+#                 {"role": "system", "content": "Ты эксперт по анализу резюме. Даешь четкий структурированный анализ."},
+#                 {"role": "user", "content": prompt}
+#             ],
+#             "temperature": 0.3,
+#             "max_tokens": 1000
+#         }
+        
+#         response = requests.post(url, headers=headers, json=data, timeout=20)
+#         response.raise_for_status()
+        
+#         result = response.json()['choices'][0]['message']['content']
+#         return parse_response(result)
+        
+#     except Exception as e:
+#         st.error(f"Ошибка анализа: {str(e)}")
+#         return [], []
+
+# def parse_response(text: str) -> tuple[list[str], list[str]]:
+#     """Парсит структурированный ответ от модели"""
+#     strong_points = []
+#     weak_points = []
     
-    if weak_points:
-        st.markdown("### ⚠️ Потенциальные пробелы")
-        for point in weak_points:
-            st.markdown(f"- {point}")
-    else:
-        st.markdown("### ✅ Все ключевые требования хорошо отражены")
+#     current_section = None
+    
+#     for line in text.split('\n'):
+#         line = line.strip()
+#         if not line:
+#             continue
+            
+#         if "СИЛЬНЫЕ СТОРОНЫ:" in line:
+#             current_section = "strong"
+#         elif "ПРОБЕЛЫ:" in line:
+#             current_section = "weak"
+#         elif line.startswith('-'):
+#             if current_section == "strong":
+#                 strong_points.append(line[1:].strip())
+#             elif current_section == "weak":
+#                 weak_points.append(line[1:].strip())
+    
+#     return strong_points, weak_points
+
+# # Интерфейс
+# if 'vacancies_data' in st.session_state and st.session_state.vacancies_data:
+#     cv_text = st.session_state.knowledge_base.get_all_text()
+#     best_vacancy = st.session_state.vacancies_data[0]
+#     vacancy_text = best_vacancy.get('description', best_vacancy.get('title', ''))
+    
+#     with st.spinner("🔍 Анализируем ваше резюме..."):
+#         strong_points, weak_points = analyze_match(cv_text, vacancy_text)
+    
+#     st.divider()
+    
+#     if strong_points:
+#         st.markdown("### 💪 Сильные соответствия")
+#         for point in strong_points:
+#             st.markdown(f"- {point}")
+#     else:
+#         st.markdown("### ℹ️ Не найдено явных сильных соответствий")
+    
+#     st.divider()
+    
+#     if weak_points:
+#         st.markdown("### ⚠️ Потенциальные пробелы")
+#         for point in weak_points:
+#             st.markdown(f"- {point}")
+#     else:
+#         st.markdown("### ✅ Все ключевые требования хорошо отражены")
