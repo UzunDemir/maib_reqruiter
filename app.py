@@ -499,7 +499,7 @@ uploaded_files = st.file_uploader(
 import docx2txt
 import io
 
-uploaded_files = st.file_uploader("Încarcă CV-ul tău (PDF, DOCX sau TXT)", type=["pdf", "docx", "txt"], accept_multiple_files=True)
+#uploaded_files = st.file_uploader("Încarcă CV-ul tău (PDF, DOCX sau TXT)", type=["pdf", "docx", "txt"], accept_multiple_files=True)
 
 if uploaded_files:
     for uploaded_file in uploaded_files:
