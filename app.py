@@ -11,6 +11,7 @@ from sklearn.feature_extraction.text import TfidfVectorizer
 from sklearn.metrics.pairwise import cosine_similarity
 import numpy as np
 import docx
+import textract
 from concurrent.futures import ThreadPoolExecutor
 
 st.set_page_config(layout="wide", initial_sidebar_state="expanded")
