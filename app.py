@@ -10,11 +10,12 @@ import tempfile
 from sklearn.feature_extraction.text import TfidfVectorizer
 from sklearn.metrics.pairwise import cosine_similarity
 import numpy as np
-import docx  # python-docx
+import docx
+from concurrent.futures import ThreadPoolExecutor
 
 st.set_page_config(layout="wide", initial_sidebar_state="expanded")
 
-# --- Стили и боковая панель ---
+# --- Stiluri și bara laterală ---
 st.markdown("""
     <style>
         section[data-testid="stSidebar"] {
@@ -41,10 +42,32 @@ st.markdown("""
             flex-direction: column;
             margin-top: 0vh;
         }
+        .match-card {
+            border-radius: 10px;
+            padding: 15px;
+            margin-bottom: 15px;
+            background-color: #f0f2f6;
+        }
+        .match-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        .progress-bar {
+            height: 10px;
+            background-color: #e0e0e0;
+            border-radius: 5px;
+            margin-top: 5px;
+        }
+        .progress-fill {
+            height: 100%;
+            border-radius: 5px;
+            background-color: #40c1ac;
+        }
     </style>
     <div class="center">
         <img src="https://www.maib.md/uploads/custom_blocks/image_1633004921_8nR1jw3Qfu_auto__0.png" width="300">
-        <h1>HR-Recruiter</h1>
+        <h1>HR-Recruiter MAIB</h1>
     </div>
 """, unsafe_allow_html=True)
 
@@ -53,13 +76,13 @@ st.sidebar.divider()
 st.sidebar.markdown("""
 <div class="sidebar-text">
 1. 📥 **Încărcarea posturilor vacante**  
-2. 📄 **CV-ul utilizatorului**  
-3. 🤖 **Căutarea posturilor potrivite**  
-4. 🔍 **Analiza celei mai relevante poziții**  
-5. ✅ **Acordul candidatului**  
-6. 🗣️ **Primul interviu (general)**  
-7. 💻 **Interviul tehnic**  
-8. 📋 **Concluzia finală**  
+2. 📄 **CV-ul candidatului**  
+3. 🤖 **Căutarea potrivirilor**  
+4. 🔍 **Analiza potrivirilor**  
+5. ✅ **Confirmarea interesului**  
+6. 🗣️ **Interviu preliminar**  
+7. 💻 **Evaluare tehnică**  
+8. 📋 **Decizie finală**  
 </div>
 """, unsafe_allow_html=True)
 
@@ -72,31 +95,28 @@ class DocumentChunk:
         self.page_num = page_num
 
 class KnowledgeBase:
-    
-    def clear(self):
-            self.chunks = []
-            self.doc_texts = []
-            self.uploaded_files = []
-
-
-    
     def __init__(self):
         self.chunks = []
         self.uploaded_files = []
         self.doc_texts = []
-
+    
+    def clear(self):
+        self.chunks = []
+        self.doc_texts = []
+        self.uploaded_files = []
+    
     def split_text(self, text, max_chars=2000):
         chunks = []
         start = 0
         while start < len(text):
             end = min(start + max_chars, len(text))
-            chunks.append(text[start:end])
+            chunk = text[start:end].strip()
+            if chunk:  # Skip empty chunks
+                chunks.append(chunk)
             start = end
         return chunks
 
     def load_pdf(self, file_content, file_name):
-        if file_name in self.uploaded_files:
-            return False
         try:
             with tempfile.NamedTemporaryFile(delete=False, suffix='.pdf') as tmp_file:
                 tmp_file.write(file_content)
@@ -113,15 +133,13 @@ class KnowledgeBase:
             self.uploaded_files.append(file_name)
             return True
         except Exception as e:
-            st.error(f"Ошибка загрузки PDF: {e}")
+            st.error(f"Eroare la încărcarea PDF: {str(e)}")
             return False
         finally:
             if os.path.exists(tmp_file_path):
                 os.unlink(tmp_file_path)
 
     def load_docx(self, file_content, file_name):
-        if file_name in self.uploaded_files:
-            return False
         try:
             with tempfile.NamedTemporaryFile(delete=False, suffix='.docx') as tmp_file:
                 tmp_file.write(file_content)
@@ -130,7 +148,9 @@ class KnowledgeBase:
             doc = docx.Document(tmp_file_path)
             full_text = []
             for para in doc.paragraphs:
-                full_text.append(para.text)
+                text = para.text.strip()
+                if text:  # Skip empty paragraphs
+                    full_text.append(text)
             text = "\n".join(full_text)
             for chunk in self.split_text(text):
                 self.chunks.append(DocumentChunk(chunk, file_name, 0))
@@ -138,15 +158,13 @@ class KnowledgeBase:
             self.uploaded_files.append(file_name)
             return True
         except Exception as e:
-            st.error(f"Ошибка загрузки DOCX: {e}")
+            st.error(f"Eroare la încărcarea DOCX: {str(e)}")
             return False
         finally:
             if os.path.exists(tmp_file_path):
                 os.unlink(tmp_file_path)
 
     def load_txt(self, file_content, file_name):
-        if file_name in self.uploaded_files:
-            return False
         try:
             text = file_content.decode('utf-8', errors='ignore')
             for chunk in self.split_text(text):
@@ -155,7 +173,7 @@ class KnowledgeBase:
             self.uploaded_files.append(file_name)
             return True
         except Exception as e:
-            st.error(f"Ошибка загрузки TXT: {e}")
+            st.error(f"Eroare la încărcarea TXT: {str(e)}")
             return False
 
     def load_file(self, uploaded_file):
@@ -168,13 +186,13 @@ class KnowledgeBase:
         elif name.endswith('.txt'):
             return self.load_txt(content, uploaded_file.name)
         else:
-            st.warning(f"Формат файла {uploaded_file.name} не поддерживается.")
+            st.warning(f"Formatul fișierului {uploaded_file.name} nu este suportat.")
             return False
 
     def get_all_text(self):
         return "\n\n".join(self.doc_texts)
 
-# Инициализация хранилища
+# Inițializare baza de cunoștințe
 if 'knowledge_base' not in st.session_state:
     st.session_state.knowledge_base = KnowledgeBase()
 
@@ -182,14 +200,32 @@ if 'vacancies_data' not in st.session_state:
     st.session_state.vacancies_data = []
 
 ##############################
-# Загрузка вакансий с rabota.md для Moldova Agroindbank
-headers = {'User-Agent': 'Mozilla/5.0'}
-base_url = "https://www.rabota.md/ru/companies/moldova-agroindbank#vacancies"
+# Încărcare oferte de pe rabota.md
+def scrape_vacancy(url):
+    try:
+        headers = {'User-Agent': 'Mozilla/5.0'}
+        resp = requests.get(url, headers=headers, timeout=10)
+        resp.raise_for_status()
+        soup_vac = BeautifulSoup(resp.text, 'html.parser')
 
-if st.button("Încarcă ofertele de muncă de pe rabota.md"):
-    with st.spinner("Загружаем вакансии..."):
+        title_tag = soup_vac.find('h1')
+        title = title_tag.get_text(strip=True) if title_tag else 'Titlu indisponibil'
+
+        vacancy_content = soup_vac.find('div', class_='vacancy-content')
+        description = vacancy_content.get_text(separator='\n', strip=True) if vacancy_content else 'Descriere indisponibilă'
+
+        return {'url': url, 'title': title, 'description': description}
+    except Exception as e:
+        st.error(f"Eroare la preluarea ofertei {url}: {str(e)}")
+        return None
+
+def load_vacancies():
+    base_url = "https://www.rabota.md/ru/companies/moldova-agroindbank#vacancies"
+    headers = {'User-Agent': 'Mozilla/5.0'}
+    
+    with st.spinner("Se încarcă ofertele de muncă..."):
         try:
-            response = requests.get(base_url, headers=headers)
+            response = requests.get(base_url, headers=headers, timeout=10)
             response.raise_for_status()
             soup = BeautifulSoup(response.text, 'html.parser')
 
@@ -200,91 +236,118 @@ if st.button("Încarcă ofertele de muncă de pe rabota.md"):
             progress_bar = st.progress(0)
             status_text = st.empty()
 
-            for i, url in enumerate(urls):
-                resp = requests.get(url, headers=headers)
-                resp.raise_for_status()
-                soup_vac = BeautifulSoup(resp.text, 'html.parser')
+            # Use threading to speed up scraping
+            with ThreadPoolExecutor(max_workers=5) as executor:
+                results = list(executor.map(scrape_vacancy, urls))
+            
+            for i, result in enumerate(results):
+                if result:
+                    vacancies_data.append(result)
+                    progress = (i + 1) / len(urls)
+                    progress_bar.progress(progress)
+                    status_text.text(f"[{i+1}/{len(urls)}] Ofertă încărcată: {result['title']}")
 
-                title_tag = soup_vac.find('h1')
-                title = title_tag.get_text(strip=True) if title_tag else 'Не найдено'
-
-                vacancy_content = soup_vac.find('div', class_='vacancy-content')
-                description = vacancy_content.get_text(separator='\n', strip=True) if vacancy_content else 'Описание не найдено'
-
-                vacancies_data.append({'url': url, 'title': title, 'description': description})
-
-                status_text.text(f"[{i+1}/{len(urls)}] Сохранена вакансия: {title}")
-                progress_bar.progress((i+1)/len(urls))
-                time.sleep(0.1)
-
-            st.session_state.vacancies_data = vacancies_data
-
+            st.session_state.vacancies_data = [v for v in vacancies_data if v is not None]
+            st.success(f"Au fost încărcate {len(st.session_state.vacancies_data)} oferte de muncă!")
+            
         except Exception as e:
-            st.error(f"Ошибка при загрузке вакансий: {e}")
+            st.error(f"Eroare la încărcarea ofertelor: {str(e)}")
 
-# 🔄 Показываем список вакансий в сайдбаре, если они уже есть
-if "vacancies_data" in st.session_state:
+if st.button("Încarcă ofertele de muncă de pe rabota.md"):
+    load_vacancies()
+
+# Afișare lista oferte în bara laterală
+if st.session_state.vacancies_data:
     with st.sidebar:
         st.markdown("### 🔎 Lista ofertelor MAIB:")
-        st.success(f"Найдено вакансий: {len(st.session_state.vacancies_data)}")
+        st.success(f"Oferte găsite: {len(st.session_state.vacancies_data)}")
         for vac in st.session_state.vacancies_data:
             st.markdown(
                 f'<a href="{vac["url"]}" target="_blank" style="color:#40c1ac; text-decoration:none;">• {vac["title"]}</a>',
                 unsafe_allow_html=True
             )
 
-
 ##############################
-# Загрузка CV (PDF, DOCX, TXT)
-st.markdown("### Încărcă CV-ul tău în format PDF, DOCX sau TXT")
-uploaded_files = st.file_uploader("Файл с резюме", type=['pdf', 'docx', 'txt'], accept_multiple_files=True)
+# Încărcare CV
+st.markdown("### 📄 Încărcă CV-ul tău (PDF, DOCX sau TXT)")
+uploaded_files = st.file_uploader("Selectează fișier(e)", type=['pdf', 'docx', 'txt'], accept_multiple_files=True)
 
 if uploaded_files:
-    kb = st.session_state.get("knowledge_base", KnowledgeBase())
-    kb.clear()  # 🧼 ОЧИСТКА ПЕРЕД НОВОЙ ЗАГРУЗКОЙ
-    for uploaded_file in uploaded_files:
-        kb.load_file(uploaded_file)
+    kb = st.session_state.knowledge_base
+    kb.clear()  # Curăță conținutul anterior
+    
+    progress_bar = st.progress(0)
+    status_text = st.empty()
+    
+    for i, uploaded_file in enumerate(uploaded_files):
+        success = kb.load_file(uploaded_file)
+        progress = (i + 1) / len(uploaded_files)
+        progress_bar.progress(progress)
+        status_text.text(f"Se procesează fișierul {i+1}/{len(uploaded_files)}: {uploaded_file.name}")
+    
     st.session_state.knowledge_base = kb
-
-
+    st.success(f"Au fost încărcate {len(uploaded_files)} fișiere!")
 
 if not st.session_state.knowledge_base.uploaded_files:
-    st.info("Загрузите CV в формате PDF, DOCX или TXT для анализа")
+    st.info("Te rugăm să încarci un CV pentru analiză")
     st.stop()
 
-st.markdown("### 🔍 Cele mai relevante oferte pentru CV-ul încărcat:")
+##############################
+# Analiza potrivirilor
+st.markdown("### 🔍 Cele mai relevante oferte pentru CV-ul tău")
 
-# Объединённый текст всех резюме
 cv_text = st.session_state.knowledge_base.get_all_text()
-
-# Все вакансии
 vacancies = st.session_state.vacancies_data
 
-# Если нет вакансий – остановим
 if not vacancies:
-    st.warning("Nu există oferte de muncă încărcate.")
+    st.warning("Nu există oferte de muncă disponibile. Te rugăm să încarci ofertele mai întâi.")
     st.stop()
 
-# Список описаний вакансий
-vacancy_texts = [vac['description'] for vac in vacancies]
-
-# Добавляем CV в список, чтобы сравнить его с каждым описанием вакансии
+# Procesare avansată a textelor
+vacancy_texts = [f"{vac['title']}\n{vac['description']}" for vac in vacancies]
 documents = [cv_text] + vacancy_texts
 
-# TF-IDF + Косинусное сходство
-vectorizer = TfidfVectorizer(stop_words=None)
-tfidf_matrix = vectorizer.fit_transform(documents)
-similarity_scores = cosine_similarity(tfidf_matrix[0:1], tfidf_matrix[1:]).flatten()
+# TF-IDF îmbunătățit
+vectorizer = TfidfVectorizer(
+    stop_words=None,
+    ngram_range=(1, 2),  # Include bigrame pentru mai mult context
+    max_features=5000
+)
 
-# Получаем индексы топ-3 вакансий
-top_indices = similarity_scores.argsort()[::-1][:3]
+try:
+    with st.spinner("Se analizează potrivirile..."):
+        tfidf_matrix = vectorizer.fit_transform(documents)
+        similarity_scores = cosine_similarity(tfidf_matrix[0:1], tfidf_matrix[1:]).flatten()
+    
+    # Normalizează scorurile între 0 și 100 pentru o afișare mai bună
+    normalized_scores = (similarity_scores - similarity_scores.min()) / (similarity_scores.max() - similarity_scores.min()) * 100
+    normalized_scores = np.clip(normalized_scores, 0, 100)
+    
+    # Obține top 3 oferte
+    top_indices = similarity_scores.argsort()[::-1][:3]
+    
+    for idx in top_indices:
+        vac = vacancies[idx]
+        score = normalized_scores[idx]
+        
+        with st.container():
+            st.markdown(f"""
+            <div class="match-card">
+                <div class="match-header">
+                    <h3>{vac['title']}</h3>
+                    <h4>{score:.0f}% potrivire</h4>
+                </div>
+                <div class="progress-bar">
+                    <div class="progress-fill" style="width: {score}%"></div>
+                </div>
+                <p><a href="{vac['url']}" target="_blank">🔗 Vezi oferta completă</a></p>
+            </div>
+            """, unsafe_allow_html=True)
+            
+            with st.expander("📝 Detalii despre ofertă"):
+                st.write(vac['description'])
+                
+            st.write("---")
 
-for idx in top_indices:
-    vac = vacancies[idx]
-    score = similarity_scores[idx]
-    st.markdown(f"#### 🏢 {vac['title']}")
-    st.markdown(f"**URL:** [Deschide oferta]({vac['url']})")
-    st.markdown(f"**Scor de relevanță:** `{score:.2f}`")
-    with st.expander("📄 Descrierea ofertei"):
-        st.write(vac['description'])
-
+except Exception as e:
+    st.error(f"Eroare la analiza potrivirilor: {str(e)}")
