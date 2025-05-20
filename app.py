@@ -494,3 +494,151 @@ if len(top_indices) > 0:
 else:
     st.warning("Не найдено подходящих вакансий для анализа")
 
+#######################################################
+
+import streamlit as st
+import requests
+import json
+from time import sleep
+
+# Функция для генерации вопросов
+def generate_interview_questions(cv_text):
+    prompt = f"""
+    Сгенерируй 10 вопросов для ознакомительного собеседования на основе этого резюме:
+    {cv_text}
+    
+    Требования:
+    1. 3 вопросов о профессиональном опыте
+    2. 2 вопроса о технических навыках
+    3. 1 вопрос о слабых сторонах
+    4. 1 вопрос о мотивации
+    5. 1 вопрос о зарплатных ожиданиях
+    6. 2 биографических вопроса
+    6. Вопросы должны быть конкретными и связанными с резюме
+    
+    Верни только нумерованный список вопросов без дополнительных пояснений.
+    """
+    
+    response = requests.post(
+        url,
+        headers=headers,
+        json={
+            "model": "deepseek-chat",
+            "messages": [{"role": "user", "content": prompt}],
+            "temperature": 0.3
+        }
+    )
+    return response.json()['choices'][0]['message']['content']
+
+# Функция для создания профиля
+def generate_candidate_profile(questions, answers):
+    prompt = f"""
+    На основе этих вопросов и ответов составь профиль кандидата:
+    
+    Вопросы:
+    {questions}
+    
+    Ответы:
+    {answers}
+    
+    Структура профиля:
+    ### 🧑‍💻 Профессиональный портрет
+    - Основные навыки
+    - Релевантный опыт
+    - Техническая экспертиза
+    
+    ### 🎯 Мотивация и цели
+    - Карьерные интересы
+    - Ожидания от работы
+    
+    ### 📈 Сильные стороны
+    - Ключевые преимущества
+    - Уникальные компетенции
+    
+    ### ⚠️ Зоны развития
+    - Слабые места
+    - Навыки для улучшения
+    
+    ### 💰 Компенсационные ожидания
+    - Зарплатные ожидания
+    - Готовность к negotiation
+    """
+    
+    response = requests.post(
+        url,
+        headers=headers,
+        json={
+            "model": "deepseek-chat",
+            "messages": [{"role": "user", "content": prompt}],
+            "temperature": 0.2
+        }
+    )
+    return response.json()['choices'][0]['message']['content']
+
+# Основной интерфейс
+st.title("🤖 HR-Ассистент: Ознакомительное собеседование")
+
+if 'interview_started' not in st.session_state:
+    st.session_state.interview_started = False
+    st.session_state.questions = None
+    st.session_state.answers = {}
+    st.session_state.profile = None
+
+# Запуск собеседования по кнопке
+if not st.session_state.interview_started:
+    if st.button("🎤 Пройти ознакомительное собеседование", type="primary"):
+        with st.spinner("Подготавливаем вопросы..."):
+            st.session_state.questions = generate_interview_questions(documents[0])
+            st.session_state.interview_started = True
+        st.rerun()
+
+# Если собеседование начато
+if st.session_state.interview_started:
+    st.success("Собеседование начато! Ответьте на вопросы ниже.")
+    
+    # Отображаем вопросы и поля для ответов
+    questions_list = [q for q in st.session_state.questions.split('\n') if q.strip()]
+    for i, question in enumerate(questions_list[:10]):
+        st.session_state.answers[i] = st.text_area(
+            label=f"**Вопрос {i+1}:** {question}",
+            value=st.session_state.answers.get(i, ""),
+            key=f"answer_{i}"
+        )
+    
+    # Кнопка завершения
+    if st.button("✅ Завершить собеседование", type="primary"):
+        with st.spinner("Анализируем ответы..."):
+            # Сохраняем ответы в удобном формате
+            formatted_answers = "\n".join(
+                [f"{i+1}. {q}\n   Ответ: {st.session_state.answers[i]}" 
+                 for i, q in enumerate(questions_list[:10])]
+            )
+            
+            # Генерируем профиль
+            st.session_state.profile = generate_candidate_profile(
+                st.session_state.questions,
+                formatted_answers
+            )
+            
+        st.success("Собеседование завершено!")
+        st.balloons()
+        
+        # Показываем профиль
+        st.markdown("## 📌 Профиль кандидата")
+        st.markdown(st.session_state.profile)
+        
+        # Кнопка скачивания
+        st.download_button(
+            label="💾 Скачать профиль",
+            data=st.session_state.profile,
+            file_name="candidate_profile.md",
+            mime="text/markdown"
+        )
+        
+        # Кнопка начать заново
+        if st.button("🔄 Пройти собеседование еще раз"):
+            st.session_state.interview_started = False
+            st.session_state.questions = None
+            st.session_state.answers = {}
+            st.session_state.profile = None
+            st.rerun()
