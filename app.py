@@ -600,7 +600,7 @@ def generate_candidate_profile(questions, answers):
     return response.json()['choices'][0]['message']['content']
 
 # Основной интерфейс
-st.title("🤖 Asistent HR: Interviu introductiv")
+st.title("🤖 AI HR-Recruiter: Interviu introductiv")
 
 if 'interview_started' not in st.session_state:
     st.session_state.interview_started = False
