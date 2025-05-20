@@ -447,52 +447,56 @@ headers = {
 if len(top_indices) > 0:
     best_match_idx = top_indices[0]
     best_match_vacancy = vacancies[best_match_idx]
-    
-    # Создаем промпт для анализа
-    prompt = f"""
-    Analizează corespondența dintre CV-ul candidatului și oferta de muncă.
-    Mai întâi voi furniza CV-ul, apoi descrierea postului.
 
-    CV-ul candidatului:
-    {cv_text}
+    # Кнопка для запуска анализа
+    if st.button("🔍 Generează analiza de potrivire"):
     
-    Descrierea postului:
-    {best_match_vacancy['description']}
-    
-    Vă rog să efectuați analiza conform următoarei structuri:
-
-    1. Punctele forte ale CV-ului (potrivirea exactă cu cerințele postului)
-    2. Punctele slabe sau lacunele din CV (unde candidatul nu corespunde)
-    3. Recomandări concrete pentru îmbunătățirea CV-ului în vederea acestei poziții
-    4. Procentajul general de potrivire (evaluat pe o scară de la 0 la 100%)
-    5. Fiți cât mai concret, citați cerințele specifice din descrierea postului și punctele din CV.
-    """
-    
-    # Отправка запроса к API
-    try:
-        with st.spinner("Generăm o analiză detaliată…"):
-            data = {
-                "model": "deepseek-chat",
-                "messages": [{"role": "user", "content": prompt}],
-                "temperature": 0.3
-            }
             
-            response = requests.post(url, headers=headers, json=data)
-            response.raise_for_status()
+            # Создаем промпт для анализа
+            prompt = f"""
+            Analizează corespondența dintre CV-ul candidatului și oferta de muncă.
+            Mai întâi voi furniza CV-ul, apoi descrierea postului.
+        
+            CV-ul candidatului:
+            {cv_text}
             
-            result = response.json()
-            analysis = result['choices'][0]['message']['content']
+            Descrierea postului:
+            {best_match_vacancy['description']}
             
-            # Отображение результатов
-            st.markdown("## 📊 Analiză detaliată a conformității")
-            st.markdown(analysis)
+            Vă rog să efectuați analiza conform următoarei structuri:
+        
+            1. Punctele forte ale CV-ului (potrivirea exactă cu cerințele postului)
+            2. Punctele slabe sau lacunele din CV (unde candidatul nu corespunde)
+            3. Recomandări concrete pentru îmbunătățirea CV-ului în vederea acestei poziții
+            4. Procentajul general de potrivire (evaluat pe o scară de la 0 la 100%)
+            5. Fiți cât mai concret, citați cerințele specifice din descrierea postului și punctele din CV.
+            """
             
-            
-            
-    except Exception as e:
-        st.error(f"Ошибка при запросе к API: {str(e)}")
-else:
-    st.warning("Не найдено подходящих вакансий для анализа")
+            # Отправка запроса к API
+            try:
+                with st.spinner("Generăm o analiză detaliată…"):
+                    data = {
+                        "model": "deepseek-chat",
+                        "messages": [{"role": "user", "content": prompt}],
+                        "temperature": 0.3
+                    }
+                    
+                    response = requests.post(url, headers=headers, json=data)
+                    response.raise_for_status()
+                    
+                    result = response.json()
+                    analysis = result['choices'][0]['message']['content']
+                    
+                    # Отображение результатов
+                    st.markdown("## 📊 Analiză detaliată a conformității")
+                    st.markdown(analysis)
+                    
+                    
+                    
+            except Exception as e:
+                st.error(f"Ошибка при запросе к API: {str(e)}")
+        else:
+            st.warning("Не найдено подходящих вакансий для анализа")
 
 #######################################################
 
