@@ -308,7 +308,7 @@ if st.button("Încarcă ofertele de muncă de pe rabota.md"):
         st.success("✅ Все вакансии загружены!")
 
         for vacancy in vacancies_data:
-            st.markdown(f"### [{vacancy['title']}]({vacancy['url']})", unsafe_allow_html=True)
+            st.markdown(f'<h4><a href="{vacancy["url"]}" style="color:#40c1ac; text-decoration:none;">{vacancy["title"]}</a></h3>', unsafe_allow_html=True)
 
         json_data = json.dumps(vacancies_data, ensure_ascii=False, indent=2)
         st.download_button("Скачать вакансии в JSON", data=json_data, file_name="vacancies.json", mime="application/json")
