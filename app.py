@@ -252,13 +252,13 @@ if 'messages' not in st.session_state:
 
 
 # Загрузка документов
-uploaded_files = st.file_uploader("Загрузить учебные материалы в PDF", type="pdf", accept_multiple_files=True)
+uploaded_files = st.file_uploader("Încarcă CV-ul tău în format PDF", type="pdf", accept_multiple_files=True)
 if uploaded_files:
     for uploaded_file in uploaded_files:
         if uploaded_file.name not in st.session_state.knowledge_base.get_document_names():
             success = st.session_state.knowledge_base.load_pdf(uploaded_file.getvalue(), uploaded_file.name)
             if success:
-                st.success(f"Файл {uploaded_file.name} успешно загружен")
+                st.success(f"Fișierul {uploaded_file.name} a fost încărcat cu succes!")
 
 # Отображение загруженных документов
 if st.session_state.knowledge_base.get_document_names():
