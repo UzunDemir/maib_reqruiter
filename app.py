@@ -38,91 +38,72 @@ tokenizer = GPT2Tokenizer.from_pretrained("gpt2")
 # """, unsafe_allow_html=True)
 #################################
 
-# Настройки страницы
-st.set_page_config(layout="wide", initial_sidebar_state="auto")
+import streamlit as st
 
-# Кастомные стили + логотип
+st.set_page_config(layout="wide", initial_sidebar_state="expanded")
+
+# Настройка логотипа
+st.sidebar.image("maib_logo.png", use_column_width=True)
+
+# Кастомизация через HTML+JS для боковой панели
 st.markdown("""
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<style>
-    .css-1jc7ptx, .e1ewe7hr3, .viewerBadge_container__1QSob, 
-    .styles_viewerBadge__1yB5_, .viewerBadge_link__1S137, 
-    .viewerBadge_text__1JaDK, #MainMenu, footer, header { 
-        display: none !important; 
-    }
-    .sidebar .sidebar-content {
-         background-color: #E6F4E6; /* светло-салатовый фон */
-    }
+    <style>
+        /* Сайдбар целиком */
+        section[data-testid="stSidebar"] {
+            background-color: #1DB954 !important;
+        }
 
-    }
-    .block-container {
-        padding-top: 1rem;
-    }
-    .sidebar-title {
-        color: #6DBE45;
-        font-size: 24px;
-        font-weight: bold;
-        text-align: center;
-        margin-bottom: 1rem;
-    }
-    .sidebar-logo {
-        display: block;
-        margin-left: auto;
-        margin-right: auto;
-        margin-bottom: 1rem;
-        width: 80%;
-    }
-</style>
+        /* Заголовки внутри сайдбара */
+        .sidebar-title {
+            color: white;
+            font-size: 24px;
+            font-weight: bold;
+            text-align: center;
+            margin-bottom: 1rem;
+        }
+
+        /* Текст в сайдбаре */
+        .sidebar-text {
+            color: white;
+        }
+    </style>
 """, unsafe_allow_html=True)
 
-# st.sidebar.write("[Uzun Demir](https://uzundemir.github.io/)") #[Github](https://github.com/UzunDemir)     [Linkedin](https://www.linkedin.com/in/uzundemir/)     
-# st.sidebar.write("[Github](https://github.com/UzunDemir)")
-# st.sidebar.write("[Linkedin](https://www.linkedin.com/in/uzundemir/)")
-st.sidebar.title("MAIB")
-st.sidebar.title("HR-REQRUITER")
+# Текст в сайдбаре
+st.sidebar.markdown('<div class="sidebar-title">MAIB</div>', unsafe_allow_html=True)
+st.sidebar.markdown('<div class="sidebar-title">HR-RECRUITER</div>', unsafe_allow_html=True)
+
 st.sidebar.divider()
-st.sidebar.write(
-        """                                    
-1. 📥 **Încărcarea posturilor vacante**
 
-   *Agentul încarcă automat toate posturile vacante actuale de la MAIB.*
+st.sidebar.markdown("""
+<div class="sidebar-text">
+1. 📥 <b>Încărcarea posturilor vacante</b><br>
+Agentul încarcă automat toate posturile vacante actuale de la MAIB.<br><br>
 
-2. 📄 **CV-ul utilizatorului**
+2. 📄 <b>CV-ul utilizatorului</b><br>
+Utilizatorul își încarcă CV-ul pentru analiză.<br><br>
 
-   *Utilizatorul își încarcă CV-ul pentru analiză.*
+3. 🤖 <b>Căutarea posturilor potrivite</b><br>
+Agentul analizează CV-ul și identifică <b>top 3 posturi</b> relevante pentru experiența și competențele candidatului.<br><br>
 
-3. 🤖 **Căutarea posturilor potrivite**
+4. 🔍 <b>Analiza celei mai relevante poziții</b><br>
+• Evidențiază <b>punctele forte</b> ale candidatului.<br>
+• Identifică <b>punctele slabe</b> sau lipsurile în competențe.<br><br>
 
-   * *Agentul analizează CV-ul și identifică **top 3 posturi** relevante pentru experiența și competențele candidatului.*
+5. ✅ <b>Acordul candidatului</b><br>
+Dacă este interesat, candidatul își exprimă acordul pentru a continua procesul.<br><br>
 
-4. 🔍 **Analiza celei mai relevante poziții**
+6. 🗣️ <b>Primul interviu (general)</b><br>
+Agentul pune întrebări generale, analizează răspunsurile și formulează <b>primele concluzii</b>.<br><br>
 
-   * *Evidențiază **punctele forte** ale candidatului.*
-   * *Identifică **punctele slabe** sau lipsurile în competențe.*
+7. 💻 <b>Interviul tehnic</b><br>
+Evaluarea competențelor tehnice și furnizarea unui <b>feedback tehnic</b>.<br><br>
 
-5. ✅ **Acordul candidatului**
+8. 📋 <b>Concluzia finală</b><br>
+Agentul oferă un verdict final: <b>recomandare pentru angajare</b> sau <b>refuz argumentat</b>.
+</div>
+""", unsafe_allow_html=True)
 
-   *Dacă este interesat, candidatul își exprimă acordul pentru a continua procesul.*
-
-6. 🗣️ **Primul interviu (general)**
-
-   *Agentul pune întrebări generale, analizează răspunsurile și formulează **primele concluzii**.*
-
-7. 💻 **Interviul tehnic**
-
-   *Evaluarea competențelor tehnice ale candidatului în raport cu cerințele postului și furnizarea unui **feedback tehnic**.*
-
-8. 📋 **Concluzia finală**
-
-   *Agentul oferă un verdict final: **recomandare pentru angajare** sau **refuz argumentat**.*
-
----
-
-
-                     
-                        
-                     """
-    )
 
 # Устанавливаем стиль для центрирования элементов
 st.markdown("""
