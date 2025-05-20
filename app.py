@@ -300,7 +300,7 @@ if st.button("Загрузить вакансии с rabota.md"):
                 status_text.text(f"[{i+1}/{len(urls)}] Сохранена вакансия: {title}")
                 progress_bar.progress((i+1)/len(urls))
 
-                time.sleep(1)  # пауза для уважения сервера
+                time.sleep(0,1)  # пауза для уважения сервера
 
             except Exception as e:
                 st.error(f"Ошибка при обработке {url}: {e}")
