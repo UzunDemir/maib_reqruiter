@@ -282,7 +282,7 @@ def load_vacancies():
         except Exception as e:
             st.error(f"Eroare la încărcarea ofertelor: {str(e)}")
 
-if st.button("Încarcă ofertele de muncă de pe rabota.md"):
+if st.button("Încarcă ofertele de muncă pentru tine..."):
     load_vacancies()
 
 # Afișare lista oferte în bara laterală
