@@ -68,13 +68,13 @@ st.markdown("""
     </style>
     <div class="center">
         <img src="https://www.maib.md/uploads/custom_blocks/image_1633004921_8nR1jw3Qfu_auto__0.png" width="300">
-        <h1>HR-Recruiter MAIB</h1>
+        <h1>AI HR-Recruiter</h1>
     </div>
 """, unsafe_allow_html=True)
 
 import streamlit as st
 
-st.sidebar.markdown('<div class="sidebar-title">Proiect: AI Recruiter pentru MAIB</div>', unsafe_allow_html=True)
+st.sidebar.markdown('<div class="sidebar-title">MAIB AI HR-Recruiter</div>', unsafe_allow_html=True)
 st.sidebar.divider()
 st.sidebar.markdown("""
 <div class="sidebar-text">
