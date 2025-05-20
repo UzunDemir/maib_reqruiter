@@ -305,7 +305,10 @@ if st.session_state.vacancies_data:
 else:
     st.info("Пожалуйста, сначала загрузите вакансии, нажав на кнопку выше.")
 
-pi_key = st.secrets.get("DEEPSEEK_API_KEY")
+
+######################
+
+api_key = st.secrets.get("DEEPSEEK_API_KEY")
 if not api_key:
     st.error("API ключ не настроен. Пожалуйста, добавьте его в Secrets.")
     st.stop()
