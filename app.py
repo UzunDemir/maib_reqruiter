@@ -240,14 +240,69 @@ if 'knowledge_base' not in st.session_state:
 if 'messages' not in st.session_state:
     st.session_state.messages = []
 
-# # Интерфейс
-# st.markdown("""
-# <div class="center">
-#     <h1>TEST-passer</h1>
-#     <h2>AI-ассистент по тестам</h2>
-#     <p>(строго по учебным материалам)</p>
-# </div>
-# """, unsafe_allow_html=True)
+############################################
+import streamlit as st
+import requests
+from bs4 import BeautifulSoup
+import time
+import json
+
+headers = {
+    'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64)'
+}
+
+def fetch_vacancies(urls):
+    vacancies_data = []
+    progress_bar = st.progress(0)
+    status_text = st.empty()
+
+    for i, url in enumerate(urls):
+        try:
+            response = requests.get(url, headers=headers)
+            response.raise_for_status()
+            soup = BeautifulSoup(response.text, 'html.parser')
+
+            title_tag = soup.find('h1')
+            title = title_tag.get_text(strip=True) if title_tag else 'Не найдено'
+
+            vacancy_content = soup.find('div', class_='vacancy-content')
+            description = vacancy_content.get_text(separator='\n', strip=True) if vacancy_content else 'Описание не найдено'
+
+            vacancies_data.append({
+                'url': url,
+                'title': title,
+                'description': description
+            })
+
+            status_text.text(f"[{i+1}/{len(urls)}] Сохранена вакансия: {title}")
+            progress_bar.progress((i + 1) / len(urls))
+
+            time.sleep(0.5)  # маленькая пауза, чтобы не перегружать сервер
+
+        except requests.exceptions.RequestException as e:
+            status_text.text(f"Ошибка сети при обработке {url}: {e}")
+        except Exception as e:
+            status_text.text(f"Ошибка при обработке {url}: {e}")
+
+    status_text.text("Загрузка вакансий завершена!")
+    progress_bar.empty()
+
+    return vacancies_data
+
+# Пример использования в Streamlit:
+st.title("Парсер вакансий MAIB")
+
+if st.button("Загрузить вакансии"):
+    # urls нужно получить заранее (например, тоже парсить или хранить)
+    urls = [...]  # твой список ссылок вакансий
+    data = fetch_vacancies(urls)
+
+    st.write(f"Найдено вакансий: {len(data)}")
+    for vacancy in data:
+        st.subheader(vacancy['title'])
+        st.write(vacancy['description'])
+        st.write(f"[Ссылка]({vacancy['url']})")
+#################################################################
 
 
 
