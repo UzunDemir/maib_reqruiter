@@ -16,8 +16,32 @@ from sklearn.metrics.pairwise import cosine_similarity
 from transformers import GPT2Tokenizer
 tokenizer = GPT2Tokenizer.from_pretrained("gpt2")
 
-# Настройки Streamlit
+# # Настройки Streamlit
+# st.set_page_config(layout="wide", initial_sidebar_state="auto")
+# st.markdown("""
+# <meta name="viewport" content="width=device-width, initial-scale=1.0">
+# <style>
+#     .css-1jc7ptx, .e1ewe7hr3, .viewerBadge_container__1QSob, 
+#     .styles_viewerBadge__1yB5_, .viewerBadge_link__1S137, 
+#     .viewerBadge_text__1JaDK, #MainMenu, footer, header { 
+#         display: none !important; 
+#     }
+#     .center {
+#         display: flex;
+#         justify-content: center;
+#         align-items: center;
+#         text-align: center;
+#         flex-direction: column;
+#         margin-top: 0vh;
+#     }
+# </style>
+# """, unsafe_allow_html=True)
+#################################
+
+# Настройки страницы
 st.set_page_config(layout="wide", initial_sidebar_state="auto")
+
+# Кастомные стили + логотип
 st.markdown("""
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <style>
@@ -26,17 +50,28 @@ st.markdown("""
     .viewerBadge_text__1JaDK, #MainMenu, footer, header { 
         display: none !important; 
     }
-    .center {
-        display: flex;
-        justify-content: center;
-        align-items: center;
+    .sidebar .sidebar-content {
+        background-color: #E6F4E6; /* светло-салатовый фон */
+    }
+    .block-container {
+        padding-top: 1rem;
+    }
+    .sidebar-title {
+        color: #6DBE45;
+        font-size: 24px;
+        font-weight: bold;
         text-align: center;
-        flex-direction: column;
-        margin-top: 0vh;
+        margin-bottom: 1rem;
+    }
+    .sidebar-logo {
+        display: block;
+        margin-left: auto;
+        margin-right: auto;
+        margin-bottom: 1rem;
+        width: 80%;
     }
 </style>
 """, unsafe_allow_html=True)
-#################################
 
 # st.sidebar.write("[Uzun Demir](https://uzundemir.github.io/)") #[Github](https://github.com/UzunDemir)     [Linkedin](https://www.linkedin.com/in/uzundemir/)     
 # st.sidebar.write("[Github](https://github.com/UzunDemir)")
