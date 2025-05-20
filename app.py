@@ -309,7 +309,6 @@ if st.button("Загрузить вакансии с rabota.md"):
 
         for vacancy in vacancies_data:
             st.subheader(vacancy['title'])
-            st.write(vacancy['description'])
             st.markdown(f"[Ссылка на вакансию]({vacancy['url']})")
 
         json_data = json.dumps(vacancies_data, ensure_ascii=False, indent=2)
