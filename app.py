@@ -47,7 +47,7 @@ st.sidebar.divider()
 st.sidebar.write(
         """                                     
                 
-**MAIB AI Recruiter **
+## MAIB AI Recruiter
 
 1. 📥 **Încărcarea posturilor vacante**
    Agentul încarcă automat toate posturile vacante actuale de la MAIB.
