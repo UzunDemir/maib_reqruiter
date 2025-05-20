@@ -92,8 +92,8 @@ st.sidebar.markdown("""
 
 4. 🔍 **Analiza celei mai relevante poziții**  
 
-   * Evidențiază **punctele forte** ale candidatului.*  
-   * Identifică **punctele slabe** sau lipsurile în competențe.*
+   * *Evidențiază **punctele forte** ale candidatului.*  
+   * *Identifică **punctele slabe** sau lipsurile în competențe.*
 
 5. ✅ **Acordul candidatului**  
 
