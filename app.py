@@ -10,6 +10,7 @@ import tempfile
 from sklearn.feature_extraction.text import TfidfVectorizer
 from sklearn.metrics.pairwise import cosine_similarity
 import numpy as np
+import docx  # python-docx
 
 st.set_page_config(layout="wide", initial_sidebar_state="expanded")
 
@@ -64,7 +65,6 @@ st.sidebar.markdown("""
 
 st.divider()
 
-# --- Класс для хранения CV в чанках ---
 class DocumentChunk:
     def __init__(self, text, doc_name, page_num):
         self.text = text
@@ -78,7 +78,6 @@ class KnowledgeBase:
         self.doc_texts = []
 
     def split_text(self, text, max_chars=2000):
-        """Простое разбиение текста по max_chars (приближённо)"""
         chunks = []
         start = 0
         while start < len(text):
@@ -89,7 +88,7 @@ class KnowledgeBase:
 
     def load_pdf(self, file_content, file_name):
         if file_name in self.uploaded_files:
-            return False  # Уже загружен
+            return False
         try:
             with tempfile.NamedTemporaryFile(delete=False, suffix='.pdf') as tmp_file:
                 tmp_file.write(file_content)
@@ -103,7 +102,6 @@ class KnowledgeBase:
                         for chunk in self.split_text(page_text):
                             self.chunks.append(DocumentChunk(chunk, file_name, page_num+1))
                             self.doc_texts.append(chunk)
-
             self.uploaded_files.append(file_name)
             return True
         except Exception as e:
@@ -112,6 +110,58 @@ class KnowledgeBase:
         finally:
             if os.path.exists(tmp_file_path):
                 os.unlink(tmp_file_path)
+
+    def load_docx(self, file_content, file_name):
+        if file_name in self.uploaded_files:
+            return False
+        try:
+            with tempfile.NamedTemporaryFile(delete=False, suffix='.docx') as tmp_file:
+                tmp_file.write(file_content)
+                tmp_file_path = tmp_file.name
+
+            doc = docx.Document(tmp_file_path)
+            full_text = []
+            for para in doc.paragraphs:
+                full_text.append(para.text)
+            text = "\n".join(full_text)
+            for chunk in self.split_text(text):
+                self.chunks.append(DocumentChunk(chunk, file_name, 0))
+                self.doc_texts.append(chunk)
+            self.uploaded_files.append(file_name)
+            return True
+        except Exception as e:
+            st.error(f"Ошибка загрузки DOCX: {e}")
+            return False
+        finally:
+            if os.path.exists(tmp_file_path):
+                os.unlink(tmp_file_path)
+
+    def load_txt(self, file_content, file_name):
+        if file_name in self.uploaded_files:
+            return False
+        try:
+            text = file_content.decode('utf-8', errors='ignore')
+            for chunk in self.split_text(text):
+                self.chunks.append(DocumentChunk(chunk, file_name, 0))
+                self.doc_texts.append(chunk)
+            self.uploaded_files.append(file_name)
+            return True
+        except Exception as e:
+            st.error(f"Ошибка загрузки TXT: {e}")
+            return False
+
+    def load_file(self, uploaded_file):
+        name = uploaded_file.name.lower()
+        content = uploaded_file.read()
+        if name.endswith('.pdf'):
+            return self.load_pdf(content, uploaded_file.name)
+        elif name.endswith('.docx'):
+            return self.load_docx(content, uploaded_file.name)
+        elif name.endswith('.txt'):
+            return self.load_txt(content, uploaded_file.name)
+        else:
+            st.warning(f"Формат файла {uploaded_file.name} не поддерживается.")
+            return False
 
     def get_all_text(self):
         return "\n\n".join(self.doc_texts)
@@ -172,19 +222,19 @@ if st.button("Încarcă ofertele de muncă de pe rabota.md"):
             st.error(f"Ошибка при загрузке вакансий: {e}")
 
 ##############################
-# Загрузка CV (PDF)
-st.markdown("### Încărcă CV-ul tău în format PDF")
-uploaded_files = st.file_uploader("PDF CV", type="pdf", accept_multiple_files=True)
+# Загрузка CV (PDF, DOCX, TXT)
+st.markdown("### Încărcă CV-ul tău în format PDF, DOCX sau TXT")
+uploaded_files = st.file_uploader("Файл с резюме", type=['pdf', 'docx', 'txt'], accept_multiple_files=True)
 
 if uploaded_files:
     for uploaded_file in uploaded_files:
         if uploaded_file.name not in st.session_state.knowledge_base.uploaded_files:
-            success = st.session_state.knowledge_base.load_pdf(uploaded_file.read(), uploaded_file.name)
+            success = st.session_state.knowledge_base.load_file(uploaded_file)
             if success:
                 st.success(f"Файл {uploaded_file.name} успешно загружен")
 
 if not st.session_state.knowledge_base.uploaded_files:
-    st.info("Загрузите CV в формате PDF для анализа")
+    st.info("Загрузите CV в формате PDF, DOCX или TXT для анализа")
     st.stop()
 
 ##############################
