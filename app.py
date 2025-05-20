@@ -490,16 +490,14 @@ if "knowledge_base" not in st.session_state:
 
 # 🔹 Интерфейс загрузки
 # st.title("📄 Analizator CV & Potrivire Posturi")
-uploaded_files = st.file_uploader(
-    "Încarcă CV-ul tău (PDF, DOCX, TXT)", 
-    type=["pdf", "docx", "txt"], 
-    accept_multiple_files=True
-)
-
 import docx2txt
 import io
 
-#uploaded_files = st.file_uploader("Încarcă CV-ul tău (PDF, DOCX sau TXT)", type=["pdf", "docx", "txt"], accept_multiple_files=True)
+uploaded_files = st.file_uploader(
+    "Încarcă CV-ul tău (PDF, DOCX sau TXT)", 
+    type=["pdf", "docx", "txt"], 
+    accept_multiple_files=True
+)
 
 if uploaded_files:
     for uploaded_file in uploaded_files:
@@ -517,7 +515,10 @@ if uploaded_files:
             success = st.session_state.knowledge_base.load_text(text, file_name)
 
         elif file_name.endswith(".txt"):
-            text = file_bytes.decode("utf-8")
+            try:
+                text = file_bytes.decode("utf-8")
+            except UnicodeDecodeError:
+                text = file_bytes.decode("latin1")  # fallback
             success = st.session_state.knowledge_base.load_text(text, file_name)
 
         else:
@@ -526,6 +527,7 @@ if uploaded_files:
 
         if success:
             st.success(f"Fișierul {file_name} a fost încărcat cu succes!")
+
 
 
 if not st.session_state.knowledge_base.get_document_names():
