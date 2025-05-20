@@ -77,6 +77,7 @@ st.sidebar.divider()
 
 st.sidebar.markdown("""
 <div class="sidebar-text">
+
 1. 📥 **Încărcarea posturilor vacante**
 
    *Agentul încarcă automat toate posturile vacante actuale de la MAIB.*
