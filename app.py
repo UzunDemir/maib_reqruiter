@@ -70,8 +70,8 @@ st.markdown("""
 """, unsafe_allow_html=True)
 
 # Текст в сайдбаре
-st.sidebar.markdown('<div class="sidebar-title">MAIB</div>', unsafe_allow_html=True)
-st.sidebar.markdown('<div class="sidebar-title">HR-RECRUITER</div>', unsafe_allow_html=True)
+st.sidebar.markdown('<div class="sidebar-title">dDespre proiectul:</div>', unsafe_allow_html=True)
+# st.sidebar.markdown('<div class="sidebar-title">HR-RECRUITER</div>', unsafe_allow_html=True)
 
 st.sidebar.divider()
 
@@ -123,9 +123,7 @@ st.markdown("""
     </style>
     <div class="center">
         <img src="https://www.maib.md/uploads/custom_blocks/image_1633004921_8nR1jw3Qfu_auto__0.png" width="300">
-        <h1>MAIB HR-reqruiter</h1>
-        # <h2>AI-ассистент по тестам</h2>
-        # <p> (строго по учебным материалам)</p>
+        <h1>HR-reqruiter</h1>        
     </div>
     """, unsafe_allow_html=True)
 
