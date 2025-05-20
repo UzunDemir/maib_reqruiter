@@ -263,7 +263,7 @@ headers = {
 
 base_url = "https://www.rabota.md/ru/companies/moldova-agroindbank#vacancies"
 
-if st.button("Загрузить вакансии с rabota.md"):
+if st.button("Încarcă ofertele de muncă de pe rabota.md"):
     try:
         with st.spinner("Загружаем страницу вакансий..."):
             response = requests.get(base_url, headers=headers)
