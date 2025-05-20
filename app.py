@@ -305,3 +305,69 @@ if st.session_state.vacancies_data:
 else:
     st.info("Пожалуйста, сначала загрузите вакансии, нажав на кнопку выше.")
 
+pi_key = st.secrets.get("DEEPSEEK_API_KEY")
+if not api_key:
+    st.error("API ключ не настроен. Пожалуйста, добавьте его в Secrets.")
+    st.stop()
+
+url = "https://api.deepseek.com/v1/chat/completions"
+headers = {
+    "Authorization": f"Bearer {api_key}",
+    "Content-Type": "application/json"
+}
+
+def analyze_relevance(cv_text, vacancy_text):
+    vacancy_requirements = [req.strip() for req in vacancy_text.split('.') if req.strip()]
+    
+    strong_points = []
+    weak_points = []
+
+    for req in vacancy_requirements:
+        # Формируем prompt для DeepSeek
+        prompt = (
+            f"Проверь, насколько следующая компетенция или требование '{req}' присутствует в тексте резюме:\n\n{cv_text}\n\n"
+            "Ответь числом от 0 до 1, где 1 — полное совпадение, 0 — отсутствие."
+        )
+        data = {
+            "model": "gpt-4o-mini",
+            "messages": [
+                {"role": "system", "content": "Ты эксперт по анализу резюме и вакансий."},
+                {"role": "user", "content": prompt}
+            ],
+            "max_tokens": 10,
+            "temperature": 0
+        }
+        response = requests.post(url, headers=headers, json=data)
+        if response.status_code != 200:
+            st.error(f"Ошибка DeepSeek API: {response.text}")
+            return [], []
+        
+        result_text = response.json()['choices'][0]['message']['content'].strip()
+        
+        try:
+            score = float(result_text)
+        except ValueError:
+            score = 0
+        
+        if score > 0.75:
+            strong_points.append(req)
+        else:
+            weak_points.append(req)
+    
+    return strong_points, weak_points
+
+
+if st.session_state.vacancies_data:
+    cv_text = st.session_state.knowledge_base.get_all_text()
+    best_vacancy = st.session_state.vacancies_data[0]
+    vacancy_text = best_vacancy.get('description', best_vacancy.get('title', ''))
+
+    strong_points, weak_points = analyze_relevance(cv_text, vacancy_text)
+
+    st.markdown("### 💪 Сильные стороны кандидата:")
+    for point in strong_points:
+        st.markdown(f"- {point}")
+
+    st.markdown("### ⚠️ Возможные пробелы:")
+    for point in weak_points:
+        st.markdown(f"- {point}")
