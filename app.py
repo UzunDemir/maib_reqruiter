@@ -407,6 +407,20 @@ import numpy as np
 from sklearn.feature_extraction.text import TfidfVectorizer
 from sklearn.metrics.pairwise import cosine_similarity
 
+import streamlit as st
+import tempfile
+import docx2txt
+import io
+import numpy as np
+from sklearn.feature_extraction.text import TfidfVectorizer
+from sklearn.metrics.pairwise import cosine_similarity
+
+# Если нужно, импортируй токенизатор, например из nltk:
+# from nltk.tokenize import word_tokenize
+# Или просто заглушка ниже
+def simple_tokenizer(text):
+    return text.split()
+
 # 🔹 Класс для управления загруженными документами
 class Chunk:
     def __init__(self, text, source):
@@ -420,6 +434,7 @@ class KnowledgeBase:
         self.vectorizer = TfidfVectorizer(stop_words='english')
         self.tfidf_matrix = None
         self.doc_texts = []
+        self.doc_names = set()
 
     def split_text(self, text, max_tokens=2000):
         paragraphs = text.split('\n\n')
@@ -431,8 +446,8 @@ class KnowledgeBase:
             if not para:
                 continue
 
-            tokens = tokenizer.tokenize(para)
-            if len(tokenizer.tokenize(current_chunk + para)) > max_tokens:
+            # Используем простую токенизацию (по словам)
+            if len(simple_tokenizer(current_chunk + " " + para)) > max_tokens:
                 if current_chunk:
                     chunks.append(current_chunk)
                     current_chunk = para
@@ -450,7 +465,7 @@ class KnowledgeBase:
 
         return chunks
 
-    def _load_docx(self, file_content, file_name):
+    def load_docx(self, file_content, file_name):
         try:
             with tempfile.NamedTemporaryFile(delete=False, suffix=".docx") as tmp_file:
                 tmp_file.write(file_content)
@@ -458,40 +473,48 @@ class KnowledgeBase:
             text = docx2txt.process(tmp_file_path)
             self.chunks.append(Chunk(text=text, source=file_name))
             self.doc_names.add(file_name)
+            self.uploaded_files.append(file_name)
             return True
         except Exception as e:
             st.error(f"❌ Eroare la citirea DOCX: {e}")
             return False
 
-    def _load_txt(self, file_content, file_name):
+    def load_text(self, text, file_name):
         try:
-            text = file_content.decode("utf-8")
             self.chunks.append(Chunk(text=text, source=file_name))
             self.doc_names.add(file_name)
+            self.uploaded_files.append(file_name)
             return True
         except Exception as e:
-            st.error(f"❌ Eroare la citirea TXT: {e}")
+            st.error(f"❌ Eroare la citirea textului: {e}")
             return False
+
+    def load_pdf(self, file_content, file_name):
+        # Здесь можно добавить обработку PDF (например через PyPDF2 или pdfplumber)
+        # Пока что сделаем заглушку
+        st.error("❌ Funcția de încărcare PDF nu este încă implementată.")
+        return False
 
     def get_document_names(self):
         return list(self.doc_names)
+
 
 # 🔹 Инициализация состояния
 if "knowledge_base" not in st.session_state:
     st.session_state.knowledge_base = KnowledgeBase()
 
-# # 🔹 Данные вакансий (пример)
-# vacancies_data = [
-#     {"title": "Software Developer", "description": "We are looking for a Python developer with experience in ML.", "url": "https://example.com/dev"},
-#     {"title": "Data Analyst", "description": "Candidate should know SQL, Excel and BI tools.", "url": "https://example.com/analyst"},
-#     {"title": "DevOps Engineer", "description": "Looking for someone with AWS and CI/CD experience.", "url": "https://example.com/devops"},
-#     {"title": "Frontend Developer", "description": "React.js knowledge is a must. Experience with Tailwind is a plus.", "url": "https://example.com/frontend"}
-# ]
+
+# 🔹 Данные вакансий (пример)
+vacancies_data = [
+    {"title": "Software Developer", "description": "We are looking for a Python developer with experience in ML.", "url": "https://example.com/dev"},
+    {"title": "Data Analyst", "description": "Candidate should know SQL, Excel and BI tools.", "url": "https://example.com/analyst"},
+    {"title": "DevOps Engineer", "description": "Looking for someone with AWS and CI/CD experience.", "url": "https://example.com/devops"},
+    {"title": "Frontend Developer", "description": "React.js knowledge is a must. Experience with Tailwind is a plus.", "url": "https://example.com/frontend"}
+]
+
 
 # 🔹 Интерфейс загрузки
-# st.title("📄 Analizator CV & Potrivire Posturi")
-import docx2txt
-import io
+st.title("📄 Analizator CV & Potrivire Posturi")
 
 uploaded_files = st.file_uploader(
     "Încarcă CV-ul tău (PDF, DOCX sau TXT)", 
@@ -502,24 +525,24 @@ uploaded_files = st.file_uploader(
 if uploaded_files:
     for uploaded_file in uploaded_files:
         file_name = uploaded_file.name
-        if file_name in st.session_state.knowledgebase.uploaded_files:
+
+        if file_name in st.session_state.knowledge_base.uploaded_files:
             continue
 
         file_bytes = uploaded_file.getvalue()
 
         if file_name.endswith(".pdf"):
-            success = st.session_state.knowledgebase.load_pdf(file_bytes, file_name)
+            success = st.session_state.knowledge_base.load_pdf(file_bytes, file_name)
 
         elif file_name.endswith(".docx"):
-            text = docx2txt.process(io.BytesIO(file_bytes))
-            success = st.session_state.knowledgebase.load_text(text, file_name)
+            success = st.session_state.knowledge_base.load_docx(file_bytes, file_name)
 
         elif file_name.endswith(".txt"):
             try:
                 text = file_bytes.decode("utf-8")
             except UnicodeDecodeError:
-                text = file_bytes.decode("latin1")  # fallback
-            success = st.session_state.knowledgebase.load_text(text, file_name)
+                text = file_bytes.decode("latin1")
+            success = st.session_state.knowledge_base.load_text(text, file_name)
 
         else:
             st.warning(f"Formatul fișierului {file_name} nu este acceptat.")
@@ -528,9 +551,7 @@ if uploaded_files:
         if success:
             st.success(f"Fișierul {file_name} a fost încărcat cu succes!")
 
-
-
-if not st.session_state.knowledgebase.get_document_names():
+if not st.session_state.knowledge_base.get_document_names():
     st.info("ℹ️ Încarcă CV-ul pentru a continua analiza.")
     st.stop()
 
@@ -573,6 +594,12 @@ data = {
     "max_tokens": 1000,
     "temperature": 0.2
 }
+
+# Здесь ты можешь добавить вызов API для анализа, например:
+# response = openai.ChatCompletion.create(**data)
+# st.markdown(response.choices[0].message.content)
+
+
 
 # 🔹 Внешний API (замени своими ключами и URL)
 url = "https://api.your-provider.com/v1/chat/completions"
