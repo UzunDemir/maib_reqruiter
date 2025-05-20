@@ -425,8 +425,7 @@ try:
             </div>
             """, unsafe_allow_html=True)
 
-            with st.expander("📝 Detalii despre ofertă"):
-                st.write(vac['description'])
+            
 
             st.write("---")
 
