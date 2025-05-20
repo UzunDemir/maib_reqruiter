@@ -70,37 +70,47 @@ st.markdown("""
 """, unsafe_allow_html=True)
 
 # Текст в сайдбаре
-st.sidebar.markdown('<div class="sidebar-title">dDespre proiectul:</div>', unsafe_allow_html=True)
+st.sidebar.markdown('<div class="sidebar-title">Proiect: AI Recruiter pentru MAIB</div>', unsafe_allow_html=True)
 # st.sidebar.markdown('<div class="sidebar-title">HR-RECRUITER</div>', unsafe_allow_html=True)
 
 st.sidebar.divider()
 
 st.sidebar.markdown("""
 <div class="sidebar-text">
-1. 📥 <b>Încărcarea posturilor vacante</b><br>
-Agentul încarcă automat toate posturile vacante actuale de la MAIB.<br><br>
+1. 📥 **Încărcarea posturilor vacante**
 
-2. 📄 <b>CV-ul utilizatorului</b><br>
-Utilizatorul își încarcă CV-ul pentru analiză.<br><br>
+   *Agentul încarcă automat toate posturile vacante actuale de la MAIB.*
 
-3. 🤖 <b>Căutarea posturilor potrivite</b><br>
-Agentul analizează CV-ul și identifică <b>top 3 posturi</b> relevante pentru experiența și competențele candidatului.<br><br>
+2. 📄 **CV-ul utilizatorului**
 
-4. 🔍 <b>Analiza celei mai relevante poziții</b><br>
-• Evidențiază <b>punctele forte</b> ale candidatului.<br>
-• Identifică <b>punctele slabe</b> sau lipsurile în competențe.<br><br>
+   *Utilizatorul își încarcă CV-ul pentru analiză.*
 
-5. ✅ <b>Acordul candidatului</b><br>
-Dacă este interesat, candidatul își exprimă acordul pentru a continua procesul.<br><br>
+3. 🤖 **Căutarea posturilor potrivite**
 
-6. 🗣️ <b>Primul interviu (general)</b><br>
-Agentul pune întrebări generale, analizează răspunsurile și formulează <b>primele concluzii</b>.<br><br>
+   * *Agentul analizează CV-ul și identifică **top 3 posturi** relevante pentru experiența și competențele candidatului.*
 
-7. 💻 <b>Interviul tehnic</b><br>
-Evaluarea competențelor tehnice și furnizarea unui <b>feedback tehnic</b>.<br><br>
+4. 🔍 **Analiza celei mai relevante poziții**
 
-8. 📋 <b>Concluzia finală</b><br>
-Agentul oferă un verdict final: <b>recomandare pentru angajare</b> sau <b>refuz argumentat</b>.
+   * *Evidențiază **punctele forte** ale candidatului.*
+   * *Identifică **punctele slabe** sau lipsurile în competențe.*
+
+5. ✅ **Acordul candidatului**
+
+   *Dacă este interesat, candidatul își exprimă acordul pentru a continua procesul.*
+
+6. 🗣️ **Primul interviu (general)**
+
+   *Agentul pune întrebări generale, analizează răspunsurile și formulează **primele concluzii**.*
+
+7. 💻 **Interviul tehnic**
+
+   *Evaluarea competențelor tehnice ale candidatului în raport cu cerințele postului și furnizarea unui **feedback tehnic**.*
+
+8. 📋 **Concluzia finală**
+
+   *Agentul oferă un verdict final: **recomandare pentru angajare** sau **refuz argumentat**.*
+
+---
 </div>
 """, unsafe_allow_html=True)
 
