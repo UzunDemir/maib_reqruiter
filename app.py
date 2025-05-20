@@ -71,6 +71,8 @@ st.markdown("""
     </div>
 """, unsafe_allow_html=True)
 
+import streamlit as st
+
 st.sidebar.markdown('<div class="sidebar-title">Proiect: AI Recruiter pentru MAIB</div>', unsafe_allow_html=True)
 st.sidebar.divider()
 st.sidebar.markdown("""
@@ -108,11 +110,12 @@ st.sidebar.markdown("""
 8. 📋 **Concluzia finală**  
 
    *Agentul oferă un verdict final: **recomandare pentru angajare** sau **refuz argumentat**.*
-"""
+
 </div>
 """, unsafe_allow_html=True)
 
 st.divider()
+
 
 class DocumentChunk:
     def __init__(self, text, doc_name, page_num):
