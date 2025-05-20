@@ -219,13 +219,11 @@ if st.button("Încarcă ofertele de muncă de pe rabota.md"):
 
             st.session_state.vacancies_data = vacancies_data
             st.success(f"Найдено вакансий: {len(vacancies_data)}")
-
-             #👇 Выводим в боковой панели
-            with st.sidebar.expander("📋 Lista ofertelor de muncă"):
+            with st.sidebar:
+                st.markdown("### 🔎 Lista ofertelor MAIB:")
                 for vac in vacancies_data:
-                    st.markdown(
-                        f'<a href="{vac["url"]}" target="_blank" style="color:#40c1ac; text-decoration:none;">🔹 {vac["title"]}</a>',
-                        unsafe_allow_html=True
+                    st.markdown(f'<a href="{vac["url"]}" target="_blank" style="color:#40c1ac; text-decoration:none;">• {vac["title"]}</a>',
+                                unsafe_allow_html=True
                     )
             # json_data = json.dumps(vacancies_data, ensure_ascii=False, indent=2)
             # st.download_button("Скачать вакансии в JSON", data=json_data, file_name="vacancies.json", mime="application/json")
