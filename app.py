@@ -74,9 +74,9 @@ class DocumentChunk:
 class KnowledgeBase:
     
     def clear(self):
-    self.chunks = []
-    self.doc_texts = []
-    self.uploaded_files = []
+            self.chunks = []
+            self.doc_texts = []
+            self.uploaded_files = []
 
 
     
