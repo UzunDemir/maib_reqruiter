@@ -250,6 +250,36 @@ if not st.session_state.knowledge_base.uploaded_files:
 ##############################
 # Анализ и поиск топ-3 вакансий
 
+# if st.session_state.vacancies_data:
+#     st.markdown("### 🔎 Поиск релевантных вакансий для загруженного CV")
+
+#     cv_text = st.session_state.knowledge_base.get_all_text()
+#     vacancy_texts = [v['title'] for v in st.session_state.vacancies_data]
+
+#     vectorizer = TfidfVectorizer(stop_words='english')
+#     matrix = vectorizer.fit_transform([cv_text] + vacancy_texts)
+#     similarities = cosine_similarity(matrix[0:1], matrix[1:])[0]
+
+#     top_k = 3
+#     top_indices = np.argsort(similarities)[-top_k:][::-1]
+
+#     # st.markdown("### 🏆 Top 3 relevante posturi:")
+#     # for i, idx in enumerate(top_indices):
+#     #     vac = st.session_state.vacancies_data[idx]
+#     #     st.markdown(f"**{i+1}. [{vac['title']}]({vac['url']})**")
+#     #     st.write(vac['description'])
+#     st.markdown("### 🏆 Top 3 relevante posturi:")
+# for i, idx in enumerate(top_indices):
+#     vac = st.session_state.vacancies_data[idx]
+#     st.markdown(
+#         f'<h4>{i+1}. <a href="{vac["url"]}" style="color:#40c1ac; text-decoration:none;">{vac["title"]}</a></h4>',
+#         unsafe_allow_html=True
+#     )
+#     #st.write(vac['description'])
+
+
+# else:
+#     st.info("Пожалуйста, сначала загрузите вакансии, нажав на кнопку выше.")
 if st.session_state.vacancies_data:
     st.markdown("### 🔎 Поиск релевантных вакансий для загруженного CV")
 
@@ -263,20 +293,15 @@ if st.session_state.vacancies_data:
     top_k = 3
     top_indices = np.argsort(similarities)[-top_k:][::-1]
 
-    # st.markdown("### 🏆 Top 3 relevante posturi:")
-    # for i, idx in enumerate(top_indices):
-    #     vac = st.session_state.vacancies_data[idx]
-    #     st.markdown(f"**{i+1}. [{vac['title']}]({vac['url']})**")
-    #     st.write(vac['description'])
     st.markdown("### 🏆 Top 3 relevante posturi:")
-for i, idx in enumerate(top_indices):
-    vac = st.session_state.vacancies_data[idx]
-    st.markdown(
-        f'<h4>{i+1}. <a href="{vac["url"]}" style="color:#40c1ac; text-decoration:none;">{vac["title"]}</a></h4>',
-        unsafe_allow_html=True
-    )
-    #st.write(vac['description'])
-
-
+    for i, idx in enumerate(top_indices):
+        vac = st.session_state.vacancies_data[idx]
+        st.markdown(
+            f'<h4>{i+1}. <a href="{vac["url"]}" style="color:#40c1ac; text-decoration:none;">{vac["title"]}</a></h4>',
+            unsafe_allow_html=True
+        )
+        # Если хотите выводить описание вакансии, раскомментируйте строку ниже
+        # st.write(vac['description'])
 else:
     st.info("Пожалуйста, сначала загрузите вакансии, нажав на кнопку выше.")
+
