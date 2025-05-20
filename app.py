@@ -502,24 +502,24 @@ uploaded_files = st.file_uploader(
 if uploaded_files:
     for uploaded_file in uploaded_files:
         file_name = uploaded_file.name
-        if file_name in st.session_state.knowledge_base.uploaded_files:
+        if file_name in st.session_state.knowledgebase.uploaded_files:
             continue
 
         file_bytes = uploaded_file.getvalue()
 
         if file_name.endswith(".pdf"):
-            success = st.session_state.knowledge_base.load_pdf(file_bytes, file_name)
+            success = st.session_state.knowledgebase.load_pdf(file_bytes, file_name)
 
         elif file_name.endswith(".docx"):
             text = docx2txt.process(io.BytesIO(file_bytes))
-            success = st.session_state.knowledge_base.load_text(text, file_name)
+            success = st.session_state.knowledgebase.load_text(text, file_name)
 
         elif file_name.endswith(".txt"):
             try:
                 text = file_bytes.decode("utf-8")
             except UnicodeDecodeError:
                 text = file_bytes.decode("latin1")  # fallback
-            success = st.session_state.knowledge_base.load_text(text, file_name)
+            success = st.session_state.knowledgebase.load_text(text, file_name)
 
         else:
             st.warning(f"Formatul fișierului {file_name} nu este acceptat.")
@@ -530,7 +530,7 @@ if uploaded_files:
 
 
 
-if not st.session_state.knowledge_base.get_document_names():
+if not st.session_state.knowledgebase.get_document_names():
     st.info("ℹ️ Încarcă CV-ul pentru a continua analiza.")
     st.stop()
 
