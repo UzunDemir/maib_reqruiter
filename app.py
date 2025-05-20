@@ -122,7 +122,7 @@ st.markdown("""
     }
     </style>
     <div class="center">
-        <img src="https://github.com/UzunDemir/mnist_777/blob/main/200w.gif?raw=true">
+        <img src="https://www.maib.md/uploads/custom_blocks/image_1633004921_8nR1jw3Qfu_auto__0.png">
         <h1>TEST-passer</h1>
         <h2>AI-ассистент по тестам</h2>
         <p> (строго по учебным материалам)</p>
