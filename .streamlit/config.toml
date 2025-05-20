@@ -19,5 +19,5 @@ base = "dark"
 primaryColor = "#40c1ac"  # салатовый акцент (в стиле Spotify / MAIB)
 backgroundColor = "#FFFFFF"
 secondaryBackgroundColor = "#262730"
-textColor = "#40c1ac"
+textColor = "#253646"
 
