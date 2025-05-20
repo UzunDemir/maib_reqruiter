@@ -321,12 +321,168 @@ if st.button("Încarcă ofertele de muncă de pe rabota.md"):
 
 
 
-# Загрузка CV
-uploaded_files = st.file_uploader("Încarcă CV-ul tău în format PDF", type="pdf", accept_multiple_files=True)
+# # Загрузка CV
+# uploaded_files = st.file_uploader("Încarcă CV-ul tău în format PDF", type="pdf", accept_multiple_files=True)
+# if uploaded_files:
+#     for uploaded_file in uploaded_files:
+#         if uploaded_file.name not in st.session_state.knowledge_base.get_document_names():
+#             success = st.session_state.knowledge_base.load_pdf(uploaded_file.getvalue(), uploaded_file.name)
+#             if success:
+#                 st.success(f"Fișierul {uploaded_file.name} a fost încărcat cu succes!")
+
+# if not st.session_state.knowledge_base.get_document_names():
+#     st.info("ℹ️ Încarcă CV-ul pentru a continua analiza.")
+#     st.stop()
+
+# # Анализ posturilor potrivite
+# st.subheader("🔎 Identificăm posturile potrivite pentru tine...")
+
+# # Получаем top-3 вакансии, релевантные содержимому CV
+# cv_text = "\n\n".join([chunk.text for chunk in st.session_state.knowledge_base.chunks])
+# top_k = 3
+# vacancy_texts = [f"{v['title']} {v['description']}" for v in vacancies_data]
+# vectorizer = TfidfVectorizer(stop_words='english')
+# matrix = vectorizer.fit_transform([cv_text] + vacancy_texts)
+# similarities = cosine_similarity(matrix[0:1], matrix[1:])[0]
+# top_indices = np.argsort(similarities)[-top_k:][::-1]
+
+# # Показываем top-3 вакансии
+# st.subheader("🏆 Top 3 posturi relevante")
+# for i, idx in enumerate(top_indices):
+#     vacancy = vacancies_data[idx]
+#     st.markdown(f"### {i+1}. [{vacancy['title']}]({vacancy['url']})")
+#     st.markdown(vacancy['description'])
+
+# # Анализ самой релевантной вакансии
+# best_vacancy = vacancies_data[top_indices[0]]
+# context = f"CV-ul candidatului:\n{cv_text[:3000]}...\n\nPostul:\n{best_vacancy['title']} - {best_vacancy['description']}"
+
+# prompt_analysis = f"""
+# Evaluează compatibilitatea dintre CV-ul candidatului și acest post.
+# - Identifică punctele forte (ce se potrivește bine).
+# - Menționează ce competențe lipsesc sau sunt slabe.
+# Răspunde în limba română.
+# """.strip()
+
+# data = {
+#     "model": "deepseek-chat",
+#     "messages": [
+#         {"role": "user", "content": prompt_analysis},
+#         {"role": "user", "content": context}
+#     ],
+#     "max_tokens": 1000,
+#     "temperature": 0.2
+# }
+
+# st.subheader("🔍 Analiza celei mai relevante poziții")
+# with st.spinner("Se generează analiza..."):
+#     try:
+#         response = requests.post(url, headers=headers, json=data)
+#         if response.status_code == 200:
+#             answer = response.json()['choices'][0]['message']['content']
+#             st.markdown(answer + " ✅")
+#         else:
+#             st.error(f"❌ Eroare API: {response.status_code} - {response.text}")
+#     except Exception as e:
+#         st.error(f"❌ A apărut o eroare: {e}")
+import streamlit as st
+from pathlib import Path
+import docx2txt
+from PyPDF2 import PdfReader
+import tempfile
+import requests
+import numpy as np
+from sklearn.feature_extraction.text import TfidfVectorizer
+from sklearn.metrics.pairwise import cosine_similarity
+
+# 🔹 Класс для управления загруженными документами
+class Chunk:
+    def __init__(self, text, source):
+        self.text = text
+        self.source = source
+
+class KnowledgeBase:
+    def __init__(self):
+        self.chunks = []
+        self.doc_names = set()
+
+    def load_file(self, file_content, file_name):
+        suffix = Path(file_name).suffix.lower()
+        if suffix == ".pdf":
+            return self._load_pdf(file_content, file_name)
+        elif suffix == ".docx":
+            return self._load_docx(file_content, file_name)
+        elif suffix == ".txt":
+            return self._load_txt(file_content, file_name)
+        else:
+            return False
+
+    def _load_pdf(self, file_content, file_name):
+        try:
+            with tempfile.NamedTemporaryFile(delete=False, suffix=".pdf") as tmp_file:
+                tmp_file.write(file_content)
+                tmp_file_path = tmp_file.name
+            reader = PdfReader(tmp_file_path)
+            text = "\n".join([page.extract_text() for page in reader.pages if page.extract_text()])
+            self.chunks.append(Chunk(text=text, source=file_name))
+            self.doc_names.add(file_name)
+            return True
+        except Exception as e:
+            st.error(f"❌ Eroare la citirea PDF: {e}")
+            return False
+
+    def _load_docx(self, file_content, file_name):
+        try:
+            with tempfile.NamedTemporaryFile(delete=False, suffix=".docx") as tmp_file:
+                tmp_file.write(file_content)
+                tmp_file_path = tmp_file.name
+            text = docx2txt.process(tmp_file_path)
+            self.chunks.append(Chunk(text=text, source=file_name))
+            self.doc_names.add(file_name)
+            return True
+        except Exception as e:
+            st.error(f"❌ Eroare la citirea DOCX: {e}")
+            return False
+
+    def _load_txt(self, file_content, file_name):
+        try:
+            text = file_content.decode("utf-8")
+            self.chunks.append(Chunk(text=text, source=file_name))
+            self.doc_names.add(file_name)
+            return True
+        except Exception as e:
+            st.error(f"❌ Eroare la citirea TXT: {e}")
+            return False
+
+    def get_document_names(self):
+        return list(self.doc_names)
+
+# 🔹 Инициализация состояния
+if "knowledge_base" not in st.session_state:
+    st.session_state.knowledge_base = KnowledgeBase()
+
+# # 🔹 Данные вакансий (пример)
+# vacancies_data = [
+#     {"title": "Software Developer", "description": "We are looking for a Python developer with experience in ML.", "url": "https://example.com/dev"},
+#     {"title": "Data Analyst", "description": "Candidate should know SQL, Excel and BI tools.", "url": "https://example.com/analyst"},
+#     {"title": "DevOps Engineer", "description": "Looking for someone with AWS and CI/CD experience.", "url": "https://example.com/devops"},
+#     {"title": "Frontend Developer", "description": "React.js knowledge is a must. Experience with Tailwind is a plus.", "url": "https://example.com/frontend"}
+# ]
+
+# 🔹 Интерфейс загрузки
+st.title("📄 Analizator CV & Potrivire Posturi")
+uploaded_files = st.file_uploader(
+    "Încarcă CV-ul tău (PDF, DOCX, TXT)", 
+    type=["pdf", "docx", "txt"], 
+    accept_multiple_files=True
+)
+
 if uploaded_files:
     for uploaded_file in uploaded_files:
         if uploaded_file.name not in st.session_state.knowledge_base.get_document_names():
-            success = st.session_state.knowledge_base.load_pdf(uploaded_file.getvalue(), uploaded_file.name)
+            success = st.session_state.knowledge_base.load_file(
+                uploaded_file.getvalue(), uploaded_file.name
+            )
             if success:
                 st.success(f"Fișierul {uploaded_file.name} a fost încărcat cu succes!")
 
@@ -334,30 +490,30 @@ if not st.session_state.knowledge_base.get_document_names():
     st.info("ℹ️ Încarcă CV-ul pentru a continua analiza.")
     st.stop()
 
-# Анализ posturilor potrivite
+# 🔹 Анализ
 st.subheader("🔎 Identificăm posturile potrivite pentru tine...")
 
-# Получаем top-3 вакансии, релевантные содержимому CV
 cv_text = "\n\n".join([chunk.text for chunk in st.session_state.knowledge_base.chunks])
 top_k = 3
 vacancy_texts = [f"{v['title']} {v['description']}" for v in vacancies_data]
+
 vectorizer = TfidfVectorizer(stop_words='english')
 matrix = vectorizer.fit_transform([cv_text] + vacancy_texts)
 similarities = cosine_similarity(matrix[0:1], matrix[1:])[0]
 top_indices = np.argsort(similarities)[-top_k:][::-1]
 
-# Показываем top-3 вакансии
+# 🔹 Показываем топ вакансии
 st.subheader("🏆 Top 3 posturi relevante")
 for i, idx in enumerate(top_indices):
     vacancy = vacancies_data[idx]
     st.markdown(f"### {i+1}. [{vacancy['title']}]({vacancy['url']})")
     st.markdown(vacancy['description'])
 
-# Анализ самой релевантной вакансии
+# 🔹 Анализ лучшей вакансии
 best_vacancy = vacancies_data[top_indices[0]]
 context = f"CV-ul candidatului:\n{cv_text[:3000]}...\n\nPostul:\n{best_vacancy['title']} - {best_vacancy['description']}"
 
-prompt_analysis = f"""
+prompt_analysis = """
 Evaluează compatibilitatea dintre CV-ul candidatului și acest post.
 - Identifică punctele forte (ce se potrivește bine).
 - Menționează ce competențe lipsesc sau sunt slabe.
@@ -373,6 +529,10 @@ data = {
     "max_tokens": 1000,
     "temperature": 0.2
 }
+
+# 🔹 Внешний API (замени своими ключами и URL)
+url = "https://api.your-provider.com/v1/chat/completions"
+headers = {"Authorization": f"Bearer YOUR_API_KEY"}
 
 st.subheader("🔍 Analiza celei mai relevante poziții")
 with st.spinner("Se generează analiza..."):
