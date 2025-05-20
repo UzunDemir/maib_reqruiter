@@ -254,7 +254,7 @@ if st.session_state.vacancies_data:
     st.markdown("### 🔎 Поиск релевантных вакансий для загруженного CV")
 
     cv_text = st.session_state.knowledge_base.get_all_text()
-    vacancy_texts = [v['title'] + "\n" + v['description'] for v in st.session_state.vacancies_data]
+    vacancy_texts = [v['title'] for v in st.session_state.vacancies_data]
 
     vectorizer = TfidfVectorizer(stop_words='english')
     matrix = vectorizer.fit_transform([cv_text] + vacancy_texts)
