@@ -253,8 +253,8 @@ class DocumentChunk:
         return self.uploaded_files
 
 # Инициализация
-if 'knowledge_base' not in st.session_state:
-    st.session_state.knowledgebase = KnowledgeBase()
+# if 'knowledge_base' not in st.session_state:
+#     st.session_state.knowledgebase = KnowledgeBase()
 
 if 'messages' not in st.session_state:
     st.session_state.messages = []
