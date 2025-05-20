@@ -17,7 +17,7 @@ enableCORS = false
 [theme]
 base = "dark"
 primaryColor = "#40c1ac"  # салатовый акцент (в стиле Spotify / MAIB)
-backgroundColor = "#253646"
+backgroundColor = "#FFFFFF"
 secondaryBackgroundColor = "#262730"
 textColor = "#40c1ac"
 
