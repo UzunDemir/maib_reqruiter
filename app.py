@@ -398,16 +398,6 @@ if st.button("Încarcă ofertele de muncă de pe rabota.md"):
 #     except Exception as e:
 #         st.error(f"❌ A apărut o eroare: {e}")
 import streamlit as st
-from pathlib import Path
-import docx2txt
-from PyPDF2 import PdfReader
-import tempfile
-import requests
-import numpy as np
-from sklearn.feature_extraction.text import TfidfVectorizer
-from sklearn.metrics.pairwise import cosine_similarity
-
-import streamlit as st
 import tempfile
 import docx2txt
 import io
@@ -415,54 +405,39 @@ import numpy as np
 from sklearn.feature_extraction.text import TfidfVectorizer
 from sklearn.metrics.pairwise import cosine_similarity
 
-# Если нужно, импортируй токенизатор, например из nltk:
-# from nltk.tokenize import word_tokenize
-# Или просто заглушка ниже
-def simple_tokenizer(text):
-    return text.split()
-
-# 🔹 Класс для управления загруженными документами
+# Класс для хранения кусочка текста из документа
 class Chunk:
     def __init__(self, text, source):
         self.text = text
         self.source = source
 
+# Основной класс для работы с загруженными документами
 class KnowledgeBase:
     def __init__(self):
         self.chunks = []
         self.uploaded_files = []
+        self.doc_names = set()
         self.vectorizer = TfidfVectorizer(stop_words='english')
         self.tfidf_matrix = None
         self.doc_texts = []
-        self.doc_names = set()
 
     def split_text(self, text, max_tokens=2000):
-        paragraphs = text.split('\n\n')
+        # Тут нужен токенизатор, например, из nltk или другого
+        # Для примера — простой split по пробелам
+        tokens = text.split()
         chunks = []
-        current_chunk = ""
+        current_chunk = []
+        current_len = 0
 
-        for para in paragraphs:
-            para = para.strip()
-            if not para:
-                continue
-
-            # Используем простую токенизацию (по словам)
-            if len(simple_tokenizer(current_chunk + " " + para)) > max_tokens:
-                if current_chunk:
-                    chunks.append(current_chunk)
-                    current_chunk = para
-                else:
-                    chunks.append(para)
-                    current_chunk = ""
-            else:
-                if current_chunk:
-                    current_chunk += "\n\n" + para
-                else:
-                    current_chunk = para
-
+        for token in tokens:
+            current_chunk.append(token)
+            current_len += 1
+            if current_len >= max_tokens:
+                chunks.append(" ".join(current_chunk))
+                current_chunk = []
+                current_len = 0
         if current_chunk:
-            chunks.append(current_chunk)
-
+            chunks.append(" ".join(current_chunk))
         return chunks
 
     def load_docx(self, file_content, file_name):
@@ -471,51 +446,66 @@ class KnowledgeBase:
                 tmp_file.write(file_content)
                 tmp_file_path = tmp_file.name
             text = docx2txt.process(tmp_file_path)
-            self.chunks.append(Chunk(text=text, source=file_name))
-            self.doc_names.add(file_name)
+            self._add_chunks(text, file_name)
             self.uploaded_files.append(file_name)
+            self.doc_names.add(file_name)
             return True
         except Exception as e:
             st.error(f"❌ Eroare la citirea DOCX: {e}")
             return False
 
-    def load_text(self, text, file_name):
+    def load_txt(self, text, file_name):
         try:
-            self.chunks.append(Chunk(text=text, source=file_name))
-            self.doc_names.add(file_name)
+            self._add_chunks(text, file_name)
             self.uploaded_files.append(file_name)
+            self.doc_names.add(file_name)
             return True
         except Exception as e:
-            st.error(f"❌ Eroare la citirea textului: {e}")
+            st.error(f"❌ Eroare la citirea TXT: {e}")
             return False
 
-    def load_pdf(self, file_content, file_name):
-        # Здесь можно добавить обработку PDF (например через PyPDF2 или pdfplumber)
-        # Пока что сделаем заглушку
-        st.error("❌ Funcția de încărcare PDF nu este încă implementată.")
-        return False
+    def load_pdf(self, file_bytes, file_name):
+        # Загрузка PDF потребует библиотеки, например PyPDF2 или pdfplumber
+        try:
+            import pdfplumber
+            with tempfile.NamedTemporaryFile(delete=False, suffix=".pdf") as tmp_file:
+                tmp_file.write(file_bytes)
+                tmp_file_path = tmp_file.name
+            text = ""
+            with pdfplumber.open(tmp_file_path) as pdf:
+                for page in pdf.pages:
+                    text += page.extract_text() + "\n\n"
+            self._add_chunks(text, file_name)
+            self.uploaded_files.append(file_name)
+            self.doc_names.add(file_name)
+            return True
+        except Exception as e:
+            st.error(f"❌ Eroare la citirea PDF: {e}")
+            return False
+
+    def _add_chunks(self, text, source):
+        # Можно использовать split_text, чтобы разбить на куски, если нужно
+        chunks = self.split_text(text)
+        for chunk_text in chunks:
+            self.chunks.append(Chunk(text=chunk_text, source=source))
 
     def get_document_names(self):
         return list(self.doc_names)
 
 
-# 🔹 Инициализация состояния
+# Инициализация KnowledgeBase в st.session_state
 if "knowledge_base" not in st.session_state:
     st.session_state.knowledge_base = KnowledgeBase()
 
+# # Пример данных вакансий (замени на свои реальные данные)
+# vacancies_data = [
+#     {"title": "Software Developer", "description": "We are looking for a Python developer with experience in ML.", "url": "https://example.com/dev"},
+#     {"title": "Data Analyst", "description": "Candidate should know SQL, Excel and BI tools.", "url": "https://example.com/analyst"},
+#     {"title": "DevOps Engineer", "description": "Looking for someone with AWS and CI/CD experience.", "url": "https://example.com/devops"},
+#     {"title": "Frontend Developer", "description": "React.js knowledge is a must. Experience with Tailwind is a plus.", "url": "https://example.com/frontend"}
+# ]
 
-# 🔹 Данные вакансий (пример)
-vacancies_data = [
-    {"title": "Software Developer", "description": "We are looking for a Python developer with experience in ML.", "url": "https://example.com/dev"},
-    {"title": "Data Analyst", "description": "Candidate should know SQL, Excel and BI tools.", "url": "https://example.com/analyst"},
-    {"title": "DevOps Engineer", "description": "Looking for someone with AWS and CI/CD experience.", "url": "https://example.com/devops"},
-    {"title": "Frontend Developer", "description": "React.js knowledge is a must. Experience with Tailwind is a plus.", "url": "https://example.com/frontend"}
-]
-
-
-# 🔹 Интерфейс загрузки
-st.title("📄 Analizator CV & Potrivire Posturi")
-
+# Интерфейс загрузки файлов
 uploaded_files = st.file_uploader(
     "Încarcă CV-ul tău (PDF, DOCX sau TXT)", 
     type=["pdf", "docx", "txt"], 
@@ -525,24 +515,26 @@ uploaded_files = st.file_uploader(
 if uploaded_files:
     for uploaded_file in uploaded_files:
         file_name = uploaded_file.name
+        kb = st.session_state.knowledge_base
 
-        if file_name in st.session_state.knowledge_base.uploaded_files:
+        if file_name in kb.uploaded_files:
             continue
 
         file_bytes = uploaded_file.getvalue()
 
         if file_name.endswith(".pdf"):
-            success = st.session_state.knowledge_base.load_pdf(file_bytes, file_name)
+            success = kb.load_pdf(file_bytes, file_name)
 
         elif file_name.endswith(".docx"):
-            success = st.session_state.knowledge_base.load_docx(file_bytes, file_name)
+            # Для docx используем байтовый поток
+            success = kb.load_docx(file_bytes, file_name)
 
         elif file_name.endswith(".txt"):
             try:
                 text = file_bytes.decode("utf-8")
             except UnicodeDecodeError:
-                text = file_bytes.decode("latin1")
-            success = st.session_state.knowledge_base.load_text(text, file_name)
+                text = file_bytes.decode("latin1")  # fallback
+            success = kb.load_txt(text, file_name)
 
         else:
             st.warning(f"Formatul fișierului {file_name} nu este acceptat.")
@@ -555,7 +547,7 @@ if not st.session_state.knowledge_base.get_document_names():
     st.info("ℹ️ Încarcă CV-ul pentru a continua analiza.")
     st.stop()
 
-# 🔹 Анализ
+# Анализ
 st.subheader("🔎 Identificăm posturile potrivite pentru tine...")
 
 cv_text = "\n\n".join([chunk.text for chunk in st.session_state.knowledge_base.chunks])
@@ -567,14 +559,14 @@ matrix = vectorizer.fit_transform([cv_text] + vacancy_texts)
 similarities = cosine_similarity(matrix[0:1], matrix[1:])[0]
 top_indices = np.argsort(similarities)[-top_k:][::-1]
 
-# 🔹 Показываем топ вакансии
+# Показываем топ вакансии
 st.subheader("🏆 Top 3 posturi relevante")
 for i, idx in enumerate(top_indices):
     vacancy = vacancies_data[idx]
     st.markdown(f"### {i+1}. [{vacancy['title']}]({vacancy['url']})")
     st.markdown(vacancy['description'])
 
-# 🔹 Анализ лучшей вакансии
+# Анализ лучшей вакансии (пример подсказки)
 best_vacancy = vacancies_data[top_indices[0]]
 context = f"CV-ul candidatului:\n{cv_text[:3000]}...\n\nPostul:\n{best_vacancy['title']} - {best_vacancy['description']}"
 
@@ -595,27 +587,9 @@ data = {
     "temperature": 0.2
 }
 
-# Здесь ты можешь добавить вызов API для анализа, например:
-# response = openai.ChatCompletion.create(**data)
-# st.markdown(response.choices[0].message.content)
+# Здесь дальше будет вызов API или другое действие с data
 
 
-
-# 🔹 Внешний API (замени своими ключами и URL)
-url = "https://api.your-provider.com/v1/chat/completions"
-headers = {"Authorization": f"Bearer YOUR_API_KEY"}
-
-st.subheader("🔍 Analiza celei mai relevante poziții")
-with st.spinner("Se generează analiza..."):
-    try:
-        response = requests.post(url, headers=headers, json=data)
-        if response.status_code == 200:
-            answer = response.json()['choices'][0]['message']['content']
-            st.markdown(answer + " ✅")
-        else:
-            st.error(f"❌ Eroare API: {response.status_code} - {response.text}")
-    except Exception as e:
-        st.error(f"❌ A apărut o eroare: {e}")
 
 # Кнопка очистки чата
 if st.button("Очистить чат"):
