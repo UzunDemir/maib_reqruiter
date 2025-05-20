@@ -254,7 +254,7 @@ class DocumentChunk:
 
 # Инициализация
 if 'knowledge_base' not in st.session_state:
-    st.session_state.knowledge_base = KnowledgeBase()
+    st.session_state.knowledgebase = KnowledgeBase()
 
 if 'messages' not in st.session_state:
     st.session_state.messages = []
