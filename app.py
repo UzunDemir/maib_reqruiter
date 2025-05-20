@@ -508,19 +508,21 @@ from time import sleep
 # Функция для генерации вопросов
 def generate_interview_questions(cv_text):
     prompt = f"""
-    Сгенерируй 10 вопросов для ознакомительного собеседования на основе этого резюме:
+    Generează 10 întrebări pentru un interviu introductiv pe baza acestui CV:
     {cv_text}
     
-    Требования:
-    1. 3 вопросов о профессиональном опыте
-    2. 2 вопроса о технических навыках
-    3. 1 вопрос о слабых сторонах
-    4. 1 вопрос о мотивации
-    5. 1 вопрос о зарплатных ожиданиях
-    6. 2 биографических вопроса
-    6. Вопросы должны быть конкретными и связанными с резюме
-    
-    Верни только нумерованный список вопросов без дополнительных пояснений.
+    Cerințe:
+
+1. 3 întrebări despre experiența profesională
+2. 2 întrebări despre abilitățile tehnice
+3. 1 întrebare despre punctele slabe
+4. 1 întrebare despre motivație
+5. 1 întrebare despre așteptările salariale
+6. 2 întrebări biografice
+
+Întrebările trebuie să fie specifice și legate de CV
+
+Returnează doar o listă numerotată de întrebări, fără explicații suplimentare.
     """
     
     response = requests.post(
@@ -537,35 +539,36 @@ def generate_interview_questions(cv_text):
 # Функция для создания профиля
 def generate_candidate_profile(questions, answers):
     prompt = f"""
-    На основе этих вопросов и ответов составь профиль кандидата:
-    
-    Вопросы:
+    Pe baza acestor întrebări și răspunsuri, creează un profil al candidatului:
+
+    Întrebări:
     {questions}
     
-    Ответы:
+    Răspunsuri:
+
     {answers}
     
     Структура профиля:
-    ### 🧑‍💻 Профессиональный портрет
-    - Основные навыки
-    - Релевантный опыт
-    - Техническая экспертиза
+    ### 🧑‍💻 Portret profesional
+    - Competențe principale
+    - Experiență relevantă
+    - Expertiză tehnică
     
-    ### 🎯 Мотивация и цели
-    - Карьерные интересы
-    - Ожидания от работы
+    ### 🎯 Motivație și obiective
+    - Interese profesionale
+    - Așteptări de la job
     
-    ### 📈 Сильные стороны
-    - Ключевые преимущества
-    - Уникальные компетенции
+    ### 📈 Puncte forte
+    - Avantaje cheie
+    - Competențe unice
     
-    ### ⚠️ Зоны развития
-    - Слабые места
-    - Навыки для улучшения
+    ### ⚠️ Zone de dezvoltare
+    - Puncte slabe
+    - Competențe de îmbunătățit
     
-    ### 💰 Компенсационные ожидания
-    - Зарплатные ожидания
-    - Готовность к negotiation
+    ### 💰 Așteptări privind compensația
+    - Așteptări salariale
+    - Disponibilitate pentru negociere
     """
     
     response = requests.post(
@@ -580,7 +583,7 @@ def generate_candidate_profile(questions, answers):
     return response.json()['choices'][0]['message']['content']
 
 # Основной интерфейс
-st.title("🤖 HR-Ассистент: Ознакомительное собеседование")
+st.title(## "🤖 Asistent HR: Interviu introductiv")
 
 if 'interview_started' not in st.session_state:
     st.session_state.interview_started = False
@@ -590,15 +593,15 @@ if 'interview_started' not in st.session_state:
 
 # Запуск собеседования по кнопке
 if not st.session_state.interview_started:
-    if st.button("🎤 Пройти ознакомительное собеседование", type="primary"):
-        with st.spinner("Подготавливаем вопросы..."):
+    if st.button("🎤 A trece interviul introductiv", type="primary"):
+        with st.spinner("Pregătim întrebările..."):
             st.session_state.questions = generate_interview_questions(documents[0])
             st.session_state.interview_started = True
         st.rerun()
 
 # Если собеседование начато
 if st.session_state.interview_started:
-    st.success("Собеседование начато! Ответьте на вопросы ниже.")
+    st.success("Interviul a început! Vă rog să răspundeți la întrebările de mai jos.")
     
     # Отображаем вопросы и поля для ответов
     questions_list = [q for q in st.session_state.questions.split('\n') if q.strip()]
@@ -610,8 +613,8 @@ if st.session_state.interview_started:
         )
     
     # Кнопка завершения
-    if st.button("✅ Завершить собеседование", type="primary"):
-        with st.spinner("Анализируем ответы..."):
+    if st.button("✅ Interviul s-a încheiat", type="primary"):
+        with st.spinner("Analizăm răspunsurile..."):
             # Сохраняем ответы в удобном формате
             formatted_answers = "\n".join(
                 [f"{i+1}. {q}\n   Ответ: {st.session_state.answers[i]}" 
@@ -624,23 +627,23 @@ if st.session_state.interview_started:
                 formatted_answers
             )
             
-        st.success("Собеседование завершено!")
+        st.success("Interviul s-a încheiat!")
         st.balloons()
         
         # Показываем профиль
-        st.markdown("## 📌 Профиль кандидата")
+        st.markdown("## 📌 Profilul candidatului")
         st.markdown(st.session_state.profile)
         
         # Кнопка скачивания
         st.download_button(
-            label="💾 Скачать профиль",
+            label="💾 Descarcă profilul",
             data=st.session_state.profile,
             file_name="candidate_profile.md",
             mime="text/markdown"
         )
         
         # Кнопка начать заново
-        if st.button("🔄 Пройти собеседование еще раз"):
+        if st.button("🔄 Susține interviul din nou"):
             st.session_state.interview_started = False
             st.session_state.questions = None
             st.session_state.answers = {}
