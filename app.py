@@ -226,12 +226,21 @@ if st.button("Încarcă ofertele de muncă de pe rabota.md"):
 st.markdown("### Încărcă CV-ul tău în format PDF, DOCX sau TXT")
 uploaded_files = st.file_uploader("Файл с резюме", type=['pdf', 'docx', 'txt'], accept_multiple_files=True)
 
+# if uploaded_files:
+#     for uploaded_file in uploaded_files:
+#         if uploaded_file.name not in st.session_state.knowledge_base.uploaded_files:
+#             success = st.session_state.knowledge_base.load_file(uploaded_file)
+#             if success:
+#                 st.success(f"Файл {uploaded_file.name} успешно загружен")
 if uploaded_files:
+    # Очистка базы перед новой загрузкой
+    st.session_state.knowledge_base = KnowledgeBase()
+
     for uploaded_file in uploaded_files:
-        if uploaded_file.name not in st.session_state.knowledge_base.uploaded_files:
-            success = st.session_state.knowledge_base.load_file(uploaded_file)
-            if success:
-                st.success(f"Файл {uploaded_file.name} успешно загружен")
+        success = st.session_state.knowledge_base.load_file(uploaded_file)
+        if success:
+            st.success(f"Файл {uploaded_file.name} успешно загружен")
+
 
 if not st.session_state.knowledge_base.uploaded_files:
     st.info("Загрузите CV в формате PDF, DOCX или TXT для анализа")
