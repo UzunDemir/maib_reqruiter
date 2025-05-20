@@ -43,7 +43,7 @@ import streamlit as st
 st.set_page_config(layout="wide", initial_sidebar_state="expanded")
 
 # Настройка логотипа
-st.sidebar.image("https://www.maib.md/uploads/custom_blocks/image_1633004921_8nR1jw3Qfu_auto__0.png", use_container_width=True)
+#st.sidebar.image("https://www.maib.md/uploads/custom_blocks/image_1633004921_8nR1jw3Qfu_auto__0.png", use_container_width=True)
 
 # Кастомизация через HTML+JS для боковой панели
 st.markdown("""
@@ -122,7 +122,7 @@ st.markdown("""
     }
     </style>
     <div class="center">
-        <img src="https://www.maib.md/uploads/custom_blocks/image_1633004921_8nR1jw3Qfu_auto__0.png">
+        <img src="https://www.maib.md/uploads/custom_blocks/image_1633004921_8nR1jw3Qfu_auto__0.png" style="width:50%;">
         <h1>TEST-passer</h1>
         <h2>AI-ассистент по тестам</h2>
         <p> (строго по учебным материалам)</p>
