@@ -72,6 +72,14 @@ class DocumentChunk:
         self.page_num = page_num
 
 class KnowledgeBase:
+    
+    def clear(self):
+    self.chunks = []
+    self.doc_texts = []
+    self.uploaded_files = []
+
+
+    
     def __init__(self):
         self.chunks = []
         self.uploaded_files = []
