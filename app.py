@@ -251,3 +251,40 @@ if uploaded_files:
 if not st.session_state.knowledge_base.uploaded_files:
     st.info("Загрузите CV в формате PDF, DOCX или TXT для анализа")
     st.stop()
+
+st.markdown("### 🔍 Cele mai relevante oferte pentru CV-ul încărcat:")
+
+# Объединённый текст всех резюме
+cv_text = st.session_state.knowledge_base.get_all_text()
+
+# Все вакансии
+vacancies = st.session_state.vacancies_data
+
+# Если нет вакансий – остановим
+if not vacancies:
+    st.warning("Nu există oferte de muncă încărcate.")
+    st.stop()
+
+# Список описаний вакансий
+vacancy_texts = [vac['description'] for vac in vacancies]
+
+# Добавляем CV в список, чтобы сравнить его с каждым описанием вакансии
+documents = [cv_text] + vacancy_texts
+
+# TF-IDF + Косинусное сходство
+vectorizer = TfidfVectorizer(stop_words='romanian')
+tfidf_matrix = vectorizer.fit_transform(documents)
+similarity_scores = cosine_similarity(tfidf_matrix[0:1], tfidf_matrix[1:]).flatten()
+
+# Получаем индексы топ-3 вакансий
+top_indices = similarity_scores.argsort()[::-1][:3]
+
+for idx in top_indices:
+    vac = vacancies[idx]
+    score = similarity_scores[idx]
+    st.markdown(f"#### 🏢 {vac['title']}")
+    st.markdown(f"**URL:** [Deschide oferta]({vac['url']})")
+    st.markdown(f"**Scor de relevanță:** `{score:.2f}`")
+    with st.expander("📄 Descrierea ofertei"):
+        st.write(vac['description'])
+
