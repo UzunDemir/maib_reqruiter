@@ -272,7 +272,7 @@ vacancy_texts = [vac['description'] for vac in vacancies]
 documents = [cv_text] + vacancy_texts
 
 # TF-IDF + Косинусное сходство
-vectorizer = TfidfVectorizer(stop_words='romanian')
+vectorizer = TfidfVectorizer(stop_words='None')
 tfidf_matrix = vectorizer.fit_transform(documents)
 similarity_scores = cosine_similarity(tfidf_matrix[0:1], tfidf_matrix[1:]).flatten()
 
