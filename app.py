@@ -46,16 +46,17 @@ st.sidebar.title("HR-REQRUITER")
 st.sidebar.divider()
 st.sidebar.write(
         """                                     
-                
-## MAIB AI Recruiter
 
 1. 📥 **Încărcarea posturilor vacante**
+
    Agentul încarcă automat toate posturile vacante actuale de la MAIB.
 
 2. 📄 **CV-ul utilizatorului**
+
    Utilizatorul își încarcă CV-ul pentru analiză.
 
 3. 🤖 **Căutarea posturilor potrivite**
+
    Agentul analizează CV-ul și identifică **top 3 posturi** relevante pentru experiența și competențele candidatului.
 
 4. 🔍 **Analiza celei mai relevante poziții**
@@ -64,15 +65,18 @@ st.sidebar.write(
    * Identifică **punctele slabe** sau lipsurile în competențe.
 
 5. ✅ **Acordul candidatului**
+
    Dacă este interesat, candidatul își exprimă acordul pentru a continua procesul.
 
 6. 🗣️ **Primul interviu (general)**
+
    Agentul pune întrebări generale, analizează răspunsurile și formulează **primele concluzii**.
 
 7. 💻 **Interviul tehnic**
    Evaluarea competențelor tehnice ale candidatului în raport cu cerințele postului și furnizarea unui **feedback tehnic**.
 
 8. 📋 **Concluzia finală**
+
    Agentul oferă un verdict final: **recomandare pentru angajare** sau **refuz argumentat**.
 
 ---
