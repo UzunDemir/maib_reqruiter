@@ -308,8 +308,7 @@ if st.button("Загрузить вакансии с rabota.md"):
         st.success("✅ Все вакансии загружены!")
 
         for vacancy in vacancies_data:
-            st.subheader(vacancy['title'])
-            st.markdown(f"[Ссылка на вакансию]({vacancy['url']})")
+            st.markdown(f"### [{vacancy['title']}]({vacancy['url']})", unsafe_allow_html=True)
 
         json_data = json.dumps(vacancies_data, ensure_ascii=False, indent=2)
         st.download_button("Скачать вакансии в JSON", data=json_data, file_name="vacancies.json", mime="application/json")
