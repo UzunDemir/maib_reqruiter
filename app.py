@@ -153,6 +153,43 @@ class DocumentChunk:
         self.page_num = page_num
         self.embedding = None
 
+# class KnowledgeBase:
+#     def __init__(self):
+#         self.chunks = []
+#         self.uploaded_files = []
+#         self.vectorizer = TfidfVectorizer(stop_words='english')
+#         self.tfidf_matrix = None
+#         self.doc_texts = []
+    
+#     def split_text(self, text, max_tokens=2000):
+#         paragraphs = text.split('\n\n')
+#         chunks = []
+#         current_chunk = ""
+        
+#         for para in paragraphs:
+#             para = para.strip()
+#             if not para:
+#                 continue
+                
+#             tokens = tokenizer.tokenize(para)
+#             if len(tokenizer.tokenize(current_chunk + para)) > max_tokens:
+#                 if current_chunk:
+#                     chunks.append(current_chunk)
+#                     current_chunk = para
+#                 else:
+#                     chunks.append(para)
+#                     current_chunk = ""
+#             else:
+#                 if current_chunk:
+#                     current_chunk += "\n\n" + para
+#                 else:
+#                     current_chunk = para
+        
+#         if current_chunk:
+#             chunks.append(current_chunk)
+            
+#         return chunks
+
 class KnowledgeBase:
     def __init__(self):
         self.chunks = []
@@ -160,17 +197,17 @@ class KnowledgeBase:
         self.vectorizer = TfidfVectorizer(stop_words='english')
         self.tfidf_matrix = None
         self.doc_texts = []
-    
+
     def split_text(self, text, max_tokens=2000):
         paragraphs = text.split('\n\n')
         chunks = []
         current_chunk = ""
-        
+
         for para in paragraphs:
             para = para.strip()
             if not para:
                 continue
-                
+
             tokens = tokenizer.tokenize(para)
             if len(tokenizer.tokenize(current_chunk + para)) > max_tokens:
                 if current_chunk:
@@ -184,11 +221,21 @@ class KnowledgeBase:
                     current_chunk += "\n\n" + para
                 else:
                     current_chunk = para
-        
+
         if current_chunk:
             chunks.append(current_chunk)
-            
+
         return chunks
+
+    def load_text(self, text, file_name):
+        if file_name in self.uploaded_files:
+            return False
+
+        chunks = self.split_text(text)
+        for chunk in chunks:
+            self.chunks.append(SimpleNamespace(text=chunk, source=file_name))
+        self.uploaded_files.append(file_name)
+        return True
     
     def load_pdf(self, file_content, file_name):
         try:
