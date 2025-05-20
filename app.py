@@ -124,131 +124,29 @@ class DocumentChunk:
         self.doc_name = doc_name
         self.page_num = page_num
 
-# class KnowledgeBase:
-#     def __init__(self):
-#         self.chunks = []
-#         self.uploaded_files = []
-#         self.doc_texts = []
-    
-#     def clear(self):
-#         self.chunks = []
-#         self.doc_texts = []
-#         self.uploaded_files = []
-    
-#     def split_text(self, text, max_chars=2000):
-#         chunks = []
-#         start = 0
-#         while start < len(text):
-#             end = min(start + max_chars, len(text))
-#             chunk = text[start:end].strip()
-#             if chunk:  # Skip empty chunks
-#                 chunks.append(chunk)
-#             start = end
-#         return chunks
-
-#     def load_pdf(self, file_content, file_name):
-#         try:
-#             with tempfile.NamedTemporaryFile(delete=False, suffix='.pdf') as tmp_file:
-#                 tmp_file.write(file_content)
-#                 tmp_file_path = tmp_file.name
-
-#             with open(tmp_file_path, 'rb') as file:
-#                 reader = PdfReader(file)
-#                 for page_num, page in enumerate(reader.pages):
-#                     page_text = page.extract_text()
-#                     if page_text:
-#                         for chunk in self.split_text(page_text):
-#                             self.chunks.append(DocumentChunk(chunk, file_name, page_num+1))
-#                             self.doc_texts.append(chunk)
-#             self.uploaded_files.append(file_name)
-#             return True
-#         except Exception as e:
-#             st.error(f"Eroare la încărcarea PDF: {str(e)}")
-#             return False
-#         finally:
-#             if os.path.exists(tmp_file_path):
-#                 os.unlink(tmp_file_path)
-
-#     def load_docx(self, file_content, file_name):
-#         try:
-#             with tempfile.NamedTemporaryFile(delete=False, suffix='.docx') as tmp_file:
-#                 tmp_file.write(file_content)
-#                 tmp_file_path = tmp_file.name
-
-#             doc = docx.Document(tmp_file_path)
-#             full_text = []
-#             for para in doc.paragraphs:
-#                 text = para.text.strip()
-#                 if text:  # Skip empty paragraphs
-#                     full_text.append(text)
-#             text = "\n".join(full_text)
-#             for chunk in self.split_text(text):
-#                 self.chunks.append(DocumentChunk(chunk, file_name, 0))
-#                 self.doc_texts.append(chunk)
-#             self.uploaded_files.append(file_name)
-#             return True
-#         except Exception as e:
-#             st.error(f"Eroare la încărcarea DOCX: {str(e)}")
-#             return False
-#         finally:
-#             if os.path.exists(tmp_file_path):
-#                 os.unlink(tmp_file_path)
-
-#     def load_txt(self, file_content, file_name):
-#         try:
-#             text = file_content.decode('utf-8', errors='ignore')
-#             for chunk in self.split_text(text):
-#                 self.chunks.append(DocumentChunk(chunk, file_name, 0))
-#                 self.doc_texts.append(chunk)
-#             self.uploaded_files.append(file_name)
-#             return True
-#         except Exception as e:
-#             st.error(f"Eroare la încărcarea TXT: {str(e)}")
-#             return False
-
-#     def load_file(self, uploaded_file):
-#         name = uploaded_file.name.lower()
-#         content = uploaded_file.read()
-#         if name.endswith('.pdf'):
-#             return self.load_pdf(content, uploaded_file.name)
-#         elif name.endswith('.docx'):
-#             return self.load_docx(content, uploaded_file.name)
-#         elif name.endswith('.txt'):
-#             return self.load_txt(content, uploaded_file.name)
-#         else:
-#             st.warning(f"Formatul fișierului {uploaded_file.name} nu este suportat.")
-#             return False
-
-#     def get_all_text(self):
-#         return "\n\n".join(self.doc_texts)
-
 class KnowledgeBase:
     def __init__(self):
         self.chunks = []
         self.uploaded_files = []
         self.doc_texts = []
-
+    
     def clear(self):
         self.chunks = []
         self.doc_texts = []
         self.uploaded_files = []
-
+    
     def split_text(self, text, max_chars=2000):
         chunks = []
         start = 0
         while start < len(text):
             end = min(start + max_chars, len(text))
             chunk = text[start:end].strip()
-            if chunk:
+            if chunk:  # Skip empty chunks
                 chunks.append(chunk)
             start = end
         return chunks
 
     def load_pdf(self, file_content, file_name):
-        import tempfile, os
-        from PyPDF2 import PdfReader
-        import streamlit as st
-
         try:
             with tempfile.NamedTemporaryFile(delete=False, suffix='.pdf') as tmp_file:
                 tmp_file.write(file_content)
@@ -272,10 +170,6 @@ class KnowledgeBase:
                 os.unlink(tmp_file_path)
 
     def load_docx(self, file_content, file_name):
-        import tempfile, os
-        import docx
-        import streamlit as st
-
         try:
             with tempfile.NamedTemporaryFile(delete=False, suffix='.docx') as tmp_file:
                 tmp_file.write(file_content)
@@ -285,7 +179,7 @@ class KnowledgeBase:
             full_text = []
             for para in doc.paragraphs:
                 text = para.text.strip()
-                if text:
+                if text:  # Skip empty paragraphs
                     full_text.append(text)
             text = "\n".join(full_text)
             for chunk in self.split_text(text):
@@ -300,33 +194,7 @@ class KnowledgeBase:
             if os.path.exists(tmp_file_path):
                 os.unlink(tmp_file_path)
 
-    def load_doc(self, file_content, file_name):
-        import tempfile, os
-        import streamlit as st
-
-        try:
-            with tempfile.NamedTemporaryFile(delete=False, suffix='.doc') as tmp_file:
-                tmp_file.write(file_content)
-                tmp_file_path = tmp_file.name
-
-            # Используем textract для извлечения текста
-            text = textract.process(tmp_file_path).decode('utf-8', errors='ignore')
-
-            for chunk in self.split_text(text):
-                self.chunks.append(DocumentChunk(chunk, file_name, 0))
-                self.doc_texts.append(chunk)
-            self.uploaded_files.append(file_name)
-            return True
-        except Exception as e:
-            st.error(f"Eroare la încărcarea DOC: {str(e)}")
-            return False
-        finally:
-            if os.path.exists(tmp_file_path):
-                os.unlink(tmp_file_path)
-
     def load_txt(self, file_content, file_name):
-        import streamlit as st
-
         try:
             text = file_content.decode('utf-8', errors='ignore')
             for chunk in self.split_text(text):
@@ -345,17 +213,16 @@ class KnowledgeBase:
             return self.load_pdf(content, uploaded_file.name)
         elif name.endswith('.docx'):
             return self.load_docx(content, uploaded_file.name)
-        elif name.endswith('.doc'):
-            return self.load_doc(content, uploaded_file.name)
         elif name.endswith('.txt'):
             return self.load_txt(content, uploaded_file.name)
         else:
-            import streamlit as st
             st.warning(f"Formatul fișierului {uploaded_file.name} nu este suportat.")
             return False
 
     def get_all_text(self):
         return "\n\n".join(self.doc_texts)
+
+
 
 
 # Inițializare baza de cunoștințe
@@ -435,8 +302,8 @@ if st.session_state.vacancies_data:
 
 ##############################
 # Încărcare CV
-st.markdown("### 📄 Încărcă CV-ul tău (PDF, DOCX, DOC, TXT)")
-uploaded_files = st.file_uploader("Selectează fișier(e)", type=['pdf', 'docx', 'doc', 'txt'], accept_multiple_files=True)
+st.markdown("### 📄 Încărcă CV-ul tău (PDF, DOCX, TXT)")
+uploaded_files = st.file_uploader("Selectează fișier(e)", type=['pdf', 'docx', 'txt'], accept_multiple_files=True)
 
 if uploaded_files:
     kb = st.session_state.knowledge_base
