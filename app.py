@@ -50,7 +50,7 @@ st.markdown("""
     <style>
         /* Сайдбар целиком */
         section[data-testid="stSidebar"] {
-            background-color: #1DB954 !important;
+            background-color: #FFFFFF !important;
         }
 
         /* Заголовки внутри сайдбара */
