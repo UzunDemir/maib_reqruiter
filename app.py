@@ -275,7 +275,7 @@ for i, idx in enumerate(top_indices):
         f'<h4>{i+1}. <a href="{vac["url"]}" style="color:#40c1ac; text-decoration:none;">{vac["title"]}</a></h4>',
         unsafe_allow_html=True
     )
-    st.write(vac['description'])
+    #st.write(vac['description'])
 
 
 else:
