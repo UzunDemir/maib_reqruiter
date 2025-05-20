@@ -190,42 +190,7 @@ class DocumentChunk:
             
 #         return chunks
 
-class KnowledgeBase:
-    def __init__(self):
-        self.chunks = []
-        self.uploaded_files = []
-        self.vectorizer = TfidfVectorizer(stop_words='english')
-        self.tfidf_matrix = None
-        self.doc_texts = []
 
-    def split_text(self, text, max_tokens=2000):
-        paragraphs = text.split('\n\n')
-        chunks = []
-        current_chunk = ""
-
-        for para in paragraphs:
-            para = para.strip()
-            if not para:
-                continue
-
-            tokens = tokenizer.tokenize(para)
-            if len(tokenizer.tokenize(current_chunk + para)) > max_tokens:
-                if current_chunk:
-                    chunks.append(current_chunk)
-                    current_chunk = para
-                else:
-                    chunks.append(para)
-                    current_chunk = ""
-            else:
-                if current_chunk:
-                    current_chunk += "\n\n" + para
-                else:
-                    current_chunk = para
-
-        if current_chunk:
-            chunks.append(current_chunk)
-
-        return chunks
 
     def load_text(self, text, file_name):
         if file_name in self.uploaded_files:
@@ -451,32 +416,39 @@ class Chunk:
 class KnowledgeBase:
     def __init__(self):
         self.chunks = []
-        self.doc_names = set()
+        self.uploaded_files = []
+        self.vectorizer = TfidfVectorizer(stop_words='english')
+        self.tfidf_matrix = None
+        self.doc_texts = []
 
-    def load_file(self, file_content, file_name):
-        suffix = Path(file_name).suffix.lower()
-        if suffix == ".pdf":
-            return self._load_pdf(file_content, file_name)
-        elif suffix == ".docx":
-            return self._load_docx(file_content, file_name)
-        elif suffix == ".txt":
-            return self._load_txt(file_content, file_name)
-        else:
-            return False
+    def split_text(self, text, max_tokens=2000):
+        paragraphs = text.split('\n\n')
+        chunks = []
+        current_chunk = ""
 
-    def _load_pdf(self, file_content, file_name):
-        try:
-            with tempfile.NamedTemporaryFile(delete=False, suffix=".pdf") as tmp_file:
-                tmp_file.write(file_content)
-                tmp_file_path = tmp_file.name
-            reader = PdfReader(tmp_file_path)
-            text = "\n".join([page.extract_text() for page in reader.pages if page.extract_text()])
-            self.chunks.append(Chunk(text=text, source=file_name))
-            self.doc_names.add(file_name)
-            return True
-        except Exception as e:
-            st.error(f"❌ Eroare la citirea PDF: {e}")
-            return False
+        for para in paragraphs:
+            para = para.strip()
+            if not para:
+                continue
+
+            tokens = tokenizer.tokenize(para)
+            if len(tokenizer.tokenize(current_chunk + para)) > max_tokens:
+                if current_chunk:
+                    chunks.append(current_chunk)
+                    current_chunk = para
+                else:
+                    chunks.append(para)
+                    current_chunk = ""
+            else:
+                if current_chunk:
+                    current_chunk += "\n\n" + para
+                else:
+                    current_chunk = para
+
+        if current_chunk:
+            chunks.append(current_chunk)
+
+        return chunks
 
     def _load_docx(self, file_content, file_name):
         try:
@@ -524,14 +496,37 @@ uploaded_files = st.file_uploader(
     accept_multiple_files=True
 )
 
+import docx2txt
+import io
+
+uploaded_files = st.file_uploader("Încarcă CV-ul tău (PDF, DOCX sau TXT)", type=["pdf", "docx", "txt"], accept_multiple_files=True)
+
 if uploaded_files:
     for uploaded_file in uploaded_files:
-        if uploaded_file.name not in st.session_state.knowledge_base.get_document_names():
-            success = st.session_state.knowledge_base.load_file(
-                uploaded_file.getvalue(), uploaded_file.name
-            )
-            if success:
-                st.success(f"Fișierul {uploaded_file.name} a fost încărcat cu succes!")
+        file_name = uploaded_file.name
+        if file_name in st.session_state.knowledge_base.uploaded_files:
+            continue
+
+        file_bytes = uploaded_file.getvalue()
+
+        if file_name.endswith(".pdf"):
+            success = st.session_state.knowledge_base.load_pdf(file_bytes, file_name)
+
+        elif file_name.endswith(".docx"):
+            text = docx2txt.process(io.BytesIO(file_bytes))
+            success = st.session_state.knowledge_base.load_text(text, file_name)
+
+        elif file_name.endswith(".txt"):
+            text = file_bytes.decode("utf-8")
+            success = st.session_state.knowledge_base.load_text(text, file_name)
+
+        else:
+            st.warning(f"Formatul fișierului {file_name} nu este acceptat.")
+            continue
+
+        if success:
+            st.success(f"Fișierul {file_name} a fost încărcat cu succes!")
+
 
 if not st.session_state.knowledge_base.get_document_names():
     st.info("ℹ️ Încarcă CV-ul pentru a continua analiza.")
