@@ -16,26 +16,26 @@ from sklearn.metrics.pairwise import cosine_similarity
 from transformers import GPT2Tokenizer
 tokenizer = GPT2Tokenizer.from_pretrained("gpt2")
 
-# Настройки Streamlit
+Настройки Streamlit
 st.set_page_config(layout="wide", initial_sidebar_state="auto")
-st.markdown("""
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-# <style>
-#     .css-1jc7ptx, .e1ewe7hr3, .viewerBadge_container__1QSob, 
-#     .styles_viewerBadge__1yB5_, .viewerBadge_link__1S137, 
-#     .viewerBadge_text__1JaDK, #MainMenu, footer, header { 
-#         display: none !important; 
-#     }
-#     .center {
-#         display: flex;
-#         justify-content: center;
-#         align-items: center;
-#         text-align: center;
-#         flex-direction: column;
-#         margin-top: 0vh;
-#     }
-# </style>
-# """, unsafe_allow_html=True)
+# st.markdown("""
+# <meta name="viewport" content="width=device-width, initial-scale=1.0">
+# # <style>
+# #     .css-1jc7ptx, .e1ewe7hr3, .viewerBadge_container__1QSob, 
+# #     .styles_viewerBadge__1yB5_, .viewerBadge_link__1S137, 
+# #     .viewerBadge_text__1JaDK, #MainMenu, footer, header { 
+# #         display: none !important; 
+# #     }
+# #     .center {
+# #         display: flex;
+# #         justify-content: center;
+# #         align-items: center;
+# #         text-align: center;
+# #         flex-direction: column;
+# #         margin-top: 0vh;
+# #     }
+# # </style>
+# # """, unsafe_allow_html=True)
 ################################
 
 import streamlit as st
