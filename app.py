@@ -244,31 +244,37 @@ if 'messages' not in st.session_state:
 import streamlit as st
 import requests
 from bs4 import BeautifulSoup
+from urllib.parse import urljoin
 import time
 import json
 
-st.title("Парсер вакансий MAIB")
+st.title("Парсер вакансий Moldova Agroindbank с rabota.md")
 
 headers = {
     'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64)'
 }
 
-# Ввод ссылок вакансий или загрузка из текстового поля (для примера)
-urls_text = st.text_area("Вставьте ссылки вакансий (по одной в строке):")
+base_url = "https://www.rabota.md/ru/companies/moldova-agroindbank#vacancies"
 
-if st.button("Загрузить вакансии"):
-    if not urls_text.strip():
-        st.warning("Пожалуйста, введите хотя бы одну ссылку.")
-    else:
-        urls = urls_text.strip().split('\n')
+if st.button("Загрузить вакансии с rabota.md"):
+    try:
+        with st.spinner("Загружаем страницу вакансий..."):
+            response = requests.get(base_url, headers=headers)
+            response.raise_for_status()
+            soup = BeautifulSoup(response.text, 'html.parser')
+
+            links = soup.find_all('a', class_='vacancyShowPopup')
+            urls = [urljoin(base_url, a['href']) for a in links]
+
+        st.success(f"Найдено вакансий: {len(urls)}")
+
         vacancies_data = []
-
         progress_bar = st.progress(0)
         status_text = st.empty()
 
         for i, url in enumerate(urls):
             try:
-                response = requests.get(url.strip(), headers=headers)
+                response = requests.get(url, headers=headers)
                 response.raise_for_status()
                 soup = BeautifulSoup(response.text, 'html.parser')
 
@@ -285,26 +291,26 @@ if st.button("Загрузить вакансии"):
                 })
 
                 status_text.text(f"[{i+1}/{len(urls)}] Сохранена вакансия: {title}")
+                progress_bar.progress((i+1)/len(urls))
 
-                progress_bar.progress((i + 1) / len(urls))
                 time.sleep(1)  # пауза для уважения сервера
 
-            except requests.exceptions.RequestException as e:
-                st.error(f"Ошибка сети при обработке {url}: {e}")
             except Exception as e:
                 st.error(f"Ошибка при обработке {url}: {e}")
 
-        st.success(f"Загрузка вакансий завершена! Найдено вакансий: {len(vacancies_data)}")
+        st.success("✅ Все вакансии загружены!")
 
-        # Вывод результатов
         for vacancy in vacancies_data:
             st.subheader(vacancy['title'])
             st.write(vacancy['description'])
             st.markdown(f"[Ссылка на вакансию]({vacancy['url']})")
 
-        # Возможность скачать результаты
-        json_data = json.dumps(vacancies_data, ensure_ascii=False, indent=4)
+        json_data = json.dumps(vacancies_data, ensure_ascii=False, indent=2)
         st.download_button("Скачать вакансии в JSON", data=json_data, file_name="vacancies.json", mime="application/json")
+
+    except Exception as e:
+        st.error(f"Ошибка при загрузке страницы вакансий: {e}")
+
 
 #################################################################
 
