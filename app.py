@@ -43,7 +43,7 @@ import streamlit as st
 st.set_page_config(layout="wide", initial_sidebar_state="expanded")
 
 # Настройка логотипа
-st.sidebar.image("maib_logo.png", use_column_width=True)
+st.sidebar.image("https://www.maib.md/uploads/custom_blocks/image_1633004921_8nR1jw3Qfu_auto__0.png", use_column_width=True)
 
 # Кастомизация через HTML+JS для боковой панели
 st.markdown("""
