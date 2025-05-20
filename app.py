@@ -46,8 +46,6 @@ st.sidebar.title("HR-REQRUITER")
 st.sidebar.divider()
 st.sidebar.write(
         """                                    
----
-
 1. 📥 **Încărcarea posturilor vacante**
 
    *Agentul încarcă automat toate posturile vacante actuale de la MAIB.*
