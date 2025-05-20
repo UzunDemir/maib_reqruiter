@@ -57,12 +57,12 @@ st.sidebar.write(
 
 3. 🤖 **Căutarea posturilor potrivite**
 
-   Agentul analizează CV-ul și identifică **top 3 posturi** relevante pentru experiența și competențele candidatului.
+   *Agentul analizează CV-ul și identifică **top 3 posturi** relevante pentru experiența și competențele candidatului.*
 
 4. 🔍 **Analiza celei mai relevante poziții**
 
-   * Evidențiază **punctele forte** ale candidatului.
-   * Identifică **punctele slabe** sau lipsurile în competențe.
+   * *Evidențiază **punctele forte** ale candidatului.*
+   * *Identifică **punctele slabe** sau lipsurile în competențe.*
 
 5. ✅ **Acordul candidatului**
 
