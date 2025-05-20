@@ -10,17 +10,13 @@ from transformers import AutoTokenizer
 import numpy as np
 from sklearn.feature_extraction.text import TfidfVectorizer
 from sklearn.metrics.pairwise import cosine_similarity
-
+st.set_page_config(layout="wide", initial_sidebar_state="expanded")
 # Инициализация токенизатора
 #tokenizer = AutoTokenizer.from_pretrained("deepseek-ai/deepseek-llm")
 from transformers import GPT2Tokenizer
 tokenizer = GPT2Tokenizer.from_pretrained("gpt2")
 
 
-
-st.set_page_config(layout="wide", initial_sidebar_state="expanded")
-
-st.set_page_config(layout="wide", initial_sidebar_state="expanded")
 
 # Настройка логотипа
 # st.sidebar.image("https://www.maib.md/uploads/custom_blocks/image_1633004921_8nR1jw3Qfu_auto__0.png", use_container_width=True)
