@@ -107,11 +107,15 @@ st.sidebar.markdown("""
 
    *Agentul pune întrebări generale, analizează răspunsurile și formulează **primele concluzii**.*
 
-7. 💻 **Interviul tehnic**  
+7. ⚡ **Detectarea răspunsurilor generate de AI**    
+
+   *Identificarea și verificarea textelor create automat pentru a asigura autenticitatea conținutului.*
+
+8. 💻 **Interviul tehnic**  
 
    *Evaluarea competențelor tehnice și furnizarea unui **feedback tehnic**.*
 
-8. 📋 **Concluzia finală**  
+9. 📋 **Concluzia finală**  
 
    *Agentul oferă un verdict final: **recomandare pentru angajare** sau **refuz argumentat**.*
 
