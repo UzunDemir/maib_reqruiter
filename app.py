@@ -21,6 +21,12 @@ st.set_page_config(layout="wide", initial_sidebar_state="expanded")
 # --- Stiluri și bara laterală ---
 st.markdown("""
     <style>
+
+    textarea {
+        font-size: 16px !important;
+    },
+
+    
         section[data-testid="stSidebar"] {
             background-color: #253646 !important;
         }
