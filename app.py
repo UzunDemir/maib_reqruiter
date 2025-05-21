@@ -129,7 +129,7 @@ st.markdown("""
         }
     </style>
     <div class="center">
-        <img src="https://www.maib.md/uploads/custom_blocks/image_1633004921_8nR1jw3Qfu_auto__0.png" width="300">
+        <img src="https://www.maib.md/uploads/custom_blocks/image_1633004921_8nR1jw3Qfu_auto__0.png" width="1000">
         <h1>AI HR-Recruiter</h1>
         <video width="300" autoplay loop muted playsinline>
             <source src="https://perspectiveapi.com/static/video/illustration/landing-highres.mp4" type="video/mp4">
