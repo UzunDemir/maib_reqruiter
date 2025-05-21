@@ -371,6 +371,42 @@ import requests
 import io
 from docx import Document  # pip install python-docx
 
+################################
+import language_tool_python
+
+tool = language_tool_python.LanguageTool('ro')  # Румынский язык
+
+def is_suspicious_ai_answer(text):
+    stripped_text = text.strip()
+    
+    # 1. Слишком короткий текст
+    if len(stripped_text) < 15:
+        return True
+    
+    # 2. Слишком длинный текст (больше 1000 символов)
+    if len(stripped_text) > 1000:
+        return True
+    
+    words = stripped_text.lower().split()
+    unique_words = set(words)
+    
+    # 3. Много повторяющихся слов (шаблонность)
+    if len(words) > 5 and len(unique_words) / len(words) < 0.5:
+        return True
+    
+    # 4. Отсутствие знаков препинания
+    if all(p not in stripped_text for p in ['.', ',', '!', '?', ':', ';']):
+        return True
+    
+    # 5. Отсутствие орфографических ошибок (слишком идеально)
+    matches = tool.check(stripped_text)
+    if len(matches) == 0:
+        return True
+    
+    return False
+###########################################################
+
+
 
 
 # --- Анализ совпадений вакансий ---
@@ -629,25 +665,64 @@ if st.session_state.interview_started:
     #     # Чтобы профиль сразу показался после окончания, перезапускаем
     #     st.rerun()
     
-    if st.button("✅ Interviul s-a încheiat", type="primary"):
+    # if st.button("✅ Interviul s-a încheiat", type="primary"):
     
+    #     with st.spinner("Analizăm răspunsurile..."):
+    #         questions_list = [q for q in st.session_state.questions.split('\n') if q.strip()]
+            
+    #         formatted_answers = "\n".join(
+    #             [
+    #                 f"{i+1}. {q}\n   Ответ: {st.session_state.answers.get(i, '').strip() or 'Candidatul nu a putut răspunde la această întrebare'}"
+    #                 for i, q in enumerate(questions_list[:10])
+    #             ]
+    #         )
+    
+    #         st.session_state.profile = generate_candidate_profile(
+    #             st.session_state.questions,
+    #             formatted_answers
+    #         )
+
+    #     st.success("Interviul s-a încheiat!")
+    #     st.balloons()
+    #     st.rerun()
+
+
+    if st.button("✅ Interviul s-a încheiat", type="primary"):
         with st.spinner("Analizăm răspunsurile..."):
             questions_list = [q for q in st.session_state.questions.split('\n') if q.strip()]
             
-            formatted_answers = "\n".join(
-                [
-                    f"{i+1}. {q}\n   Ответ: {st.session_state.answers.get(i, '').strip() or 'Candidatul nu a putut răspunde la această întrebare'}"
-                    for i, q in enumerate(questions_list[:10])
-                ]
-            )
+            formatted_answers = []
+            suspicious_found = False
+            suspicious_indices = []
     
-            st.session_state.profile = generate_candidate_profile(
-                st.session_state.questions,
-                formatted_answers
-            )
-
-        st.success("Interviul s-a încheiat!")
-        st.balloons()
+            for i, q in enumerate(questions_list[:10]):
+                answer = st.session_state.answers.get(i, '').strip()
+                
+                if not answer:
+                    answer = 'Candidatul nu a putut răspunde la această întrebare'
+                else:
+                    if is_suspicious_ai_answer(answer):
+                        suspicious_found = True
+                        suspicious_indices.append(i + 1)
+                
+                formatted_answers.append(f"{i+1}. {q}\n   Ответ: {answer}")
+    
+            formatted_answers_str = "\n".join(formatted_answers)
+    
+            if suspicious_found:
+                st.warning(
+                    f"⚠️ Unele răspunsuri par a fi generate automat sau nesincere "
+                    f"(ex: întrebările {', '.join(map(str, suspicious_indices))}).\n\n"
+                    "Vă rugăm să verificați răspunsurile sau să repetați interviul."
+                )
+            else:
+                st.session_state.profile = generate_candidate_profile(
+                    st.session_state.questions,
+                    formatted_answers_str
+                )
+                st.success("Interviul s-a încheiat!")
+                st.balloons()
+            
         st.rerun()
 
       
