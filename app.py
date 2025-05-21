@@ -629,13 +629,40 @@ if st.session_state.interview_started:
     st.success("Interviul a început! Vă rog să răspundeți la întrebările de mai jos.")
     
     # Отображаем вопросы и поля для ответов
+    # questions_list = [q for q in st.session_state.questions.split('\n') if q.strip()]
+    # for i, question in enumerate(questions_list[:10]):
+    #     st.session_state.answers[i] = st.text_area(
+    #         label=f"**{i+1}:** {question}",
+    #         value=st.session_state.answers.get(i, ""),
+    #         key=f"answer_{i}"
+    #     )
+###################################################################################
+    # Увеличим шрифт в текстовых полях через CSS
+    st.markdown("""
+        <style>
+        textarea {
+            font-size: 16px !important;
+        }
+        </style>
+    """, unsafe_allow_html=True)
+    
+    # Отображаем вопросы и поля для ответов
     questions_list = [q for q in st.session_state.questions.split('\n') if q.strip()]
     for i, question in enumerate(questions_list[:10]):
+        # Показываем вопрос с увеличенным шрифтом
+        st.markdown(f"<div style='font-size:18px; font-weight:bold; margin-top:10px;'>{i+1}: {question}</div>", unsafe_allow_html=True)
+    
+        # Поле для ответа
         st.session_state.answers[i] = st.text_area(
-            label=f"**{i+1}:** {question}",
+            label="",
             value=st.session_state.answers.get(i, ""),
-            key=f"answer_{i}"
+            key=f"answer_{i}",
         )
+#############################################################################################
+
+
+
+    
     
     # Кнопка завершения
     if st.button("✅ Interviul s-a încheiat", type="primary"):
