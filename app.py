@@ -16,65 +16,6 @@ import io
 
 from concurrent.futures import ThreadPoolExecutor
 
-# st.set_page_config(layout="wide", initial_sidebar_state="expanded")
-
-# # --- Stiluri și bara laterală ---
-# st.markdown("""
-#     <style>
-
-#         section[data-testid="stSidebar"] {
-#             background-color: #253646 !important;
-#         }
-#         .sidebar-title {
-#             color: white;
-#             font-size: 24px;
-#             font-weight: bold;
-#             text-align: center;
-#             margin-bottom: 1rem;
-#         }
-#         .sidebar-text {
-#             color: white;
-#         }
-#         #MainMenu, footer, header {
-#             display: none !important;
-#         }
-#         .center {
-#             display: flex;
-#             justify-content: center;
-#             align-items: center;
-#             text-align: center;
-#             flex-direction: column;
-#             margin-top: 0vh;
-#         }
-#         .match-card {
-#             border-radius: 10px;
-#             padding: 15px;
-#             margin-bottom: 15px;
-#             background-color: #f0f2f6;
-#         }
-#         .match-header {
-#             display: flex;
-#             justify-content: space-between;
-#             align-items: center;
-#         }
-#         .progress-bar {
-#             height: 10px;
-#             background-color: #e0e0e0;
-#             border-radius: 5px;
-#             margin-top: 5px;
-#         }
-#         .progress-fill {
-#             height: 100%;
-#             border-radius: 5px;
-#             background-color: #40c1ac;
-#         }
-#     </style>
-#     <div class="center">
-#         <img src="https://www.maib.md/uploads/custom_blocks/image_1633004921_8nR1jw3Qfu_auto__0.png" width="300">
-#         <h1>AI HR-Recruiter</h1>
-#     </div>
-# """, unsafe_allow_html=True)
-
 st.set_page_config(layout="wide", initial_sidebar_state="expanded")
 
 # --- Stiluri și bara laterală ---
@@ -131,12 +72,71 @@ st.markdown("""
     <div class="center">
         <img src="https://www.maib.md/uploads/custom_blocks/image_1633004921_8nR1jw3Qfu_auto__0.png" width="300">
         <h1>AI HR-Recruiter</h1>
-        <video width="1600" autoplay loop muted playsinline>
-            <source src="https://files.catbox.moe/hoknb5.mp4" type="video/mp4">
-            Your browser does not support the video tag.
-        </video>
     </div>
 """, unsafe_allow_html=True)
+
+# st.set_page_config(layout="wide", initial_sidebar_state="expanded")
+
+# # --- Stiluri și bara laterală ---
+# st.markdown("""
+#     <style>
+
+#         section[data-testid="stSidebar"] {
+#             background-color: #253646 !important;
+#         }
+#         .sidebar-title {
+#             color: white;
+#             font-size: 24px;
+#             font-weight: bold;
+#             text-align: center;
+#             margin-bottom: 1rem;
+#         }
+#         .sidebar-text {
+#             color: white;
+#         }
+#         #MainMenu, footer, header {
+#             display: none !important;
+#         }
+#         .center {
+#             display: flex;
+#             justify-content: center;
+#             align-items: center;
+#             text-align: center;
+#             flex-direction: column;
+#             margin-top: 0vh;
+#         }
+#         .match-card {
+#             border-radius: 10px;
+#             padding: 15px;
+#             margin-bottom: 15px;
+#             background-color: #f0f2f6;
+#         }
+#         .match-header {
+#             display: flex;
+#             justify-content: space-between;
+#             align-items: center;
+#         }
+#         .progress-bar {
+#             height: 10px;
+#             background-color: #e0e0e0;
+#             border-radius: 5px;
+#             margin-top: 5px;
+#         }
+#         .progress-fill {
+#             height: 100%;
+#             border-radius: 5px;
+#             background-color: #40c1ac;
+#         }
+#     </style>
+#     <div class="center">
+#         <img src="https://www.maib.md/uploads/custom_blocks/image_1633004921_8nR1jw3Qfu_auto__0.png" width="300">
+#         <h1>AI HR-Recruiter</h1>
+#         <video width="1600" autoplay loop muted playsinline>
+#             <source src="https://files.catbox.moe/hoknb5.mp4" type="video/mp4">
+#             Your browser does not support the video tag.
+#         </video>
+#     </div>
+# """, unsafe_allow_html=True)
 
 
 import streamlit as st
