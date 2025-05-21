@@ -623,7 +623,7 @@ if not st.session_state.interview_started:
 if st.session_state.interview_started:
     st.success("Interviul a început! Vă rog să răspundeți la întrebările de mai jos.")
     
-    Отображаем вопросы и поля для ответов
+   # Отображаем вопросы и поля для ответов
     questions_list = [q for q in st.session_state.questions.split('\n') if q.strip()]
     for i, question in enumerate(questions_list[:10]):
         st.session_state.answers[i] = st.text_area(
