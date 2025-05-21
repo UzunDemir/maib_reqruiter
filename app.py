@@ -626,7 +626,7 @@ if st.session_state.interview_started:
     questions_list = [q for q in st.session_state.questions.split('\n') if q.strip()]
     for i, question in enumerate(questions_list[:10]):
         st.session_state.answers[i] = st.text_area(
-            label=f"**Вопрос {i+1}:** {question}",
+            label=f"**{i+1}:** {question}",
             value=st.session_state.answers.get(i, ""),
             key=f"answer_{i}"
         )
