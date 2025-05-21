@@ -1279,7 +1279,7 @@ if not st.session_state.interview_started:
         with st.spinner("Pregătim întrebările..."):
             st.session_state.questions = generate_interview_questions(documents[0])
             st.session_state.interview_started = True
-        st.experimental_rerun()
+        st.rerun()
         
 
 if st.session_state.interview_started:
@@ -1308,7 +1308,7 @@ if st.session_state.interview_started:
         st.success("Interviul s-a încheiat!")
         st.balloons()
         # Чтобы профиль сразу показался после окончания, перезапускаем
-        st.experimental_rerun()
+        st.rerun()
         
 
 if st.session_state.profile:
