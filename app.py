@@ -132,7 +132,7 @@ st.markdown("""
         <img src="https://www.maib.md/uploads/custom_blocks/image_1633004921_8nR1jw3Qfu_auto__0.png" width="300">
         <h1>AI HR-Recruiter</h1>
         <video width="1600" autoplay loop muted playsinline>
-            <source src="https://files.catbox.moe/3nm3z1.mp4" type="video/mp4">
+            <source src="https://files.catbox.moe/9sqv0f.mp4" type="video/mp4">
             Your browser does not support the video tag.
         </video>
     </div>
