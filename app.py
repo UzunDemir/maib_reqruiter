@@ -1309,7 +1309,7 @@ if st.session_state.interview_started:
         st.balloons()
         # Чтобы профиль сразу показался после окончания, перезапускаем
         st.experimental_rerun()
-        return
+        
 
 if st.session_state.profile:
     st.markdown("## 📌 Profilul candidatului")
