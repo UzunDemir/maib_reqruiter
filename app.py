@@ -255,6 +255,42 @@ def scrape_vacancy(url):
         st.error(f"Eroare la preluarea ofertei {url}: {str(e)}")
         return None
 
+# def load_vacancies():
+#     base_url = "https://www.rabota.md/ru/companies/moldova-agroindbank#vacancies"
+#     headers = {'User-Agent': 'Mozilla/5.0'}
+    
+#     with st.spinner("Se încarcă ofertele de muncă..."):
+#         try:
+#             response = requests.get(base_url, headers=headers, timeout=10)
+#             response.raise_for_status()
+#             soup = BeautifulSoup(response.text, 'html.parser')
+
+#             links = soup.find_all('a', class_='vacancyShowPopup')
+#             urls = [urljoin(base_url, a['href']) for a in links]
+
+#             vacancies_data = []
+#             progress_bar = st.progress(0)
+#             status_text = st.empty()
+
+#             # Use threading to speed up scraping
+#             with ThreadPoolExecutor(max_workers=5) as executor:
+#                 results = list(executor.map(scrape_vacancy, urls))
+            
+#             for i, result in enumerate(results):
+#                 if result:
+#                     vacancies_data.append(result)
+#                     progress = (i + 1) / len(urls)
+#                     progress_bar.progress(progress)
+#                     status_text.text(f"[{i+1}/{len(urls)}] Ofertă încărcată: {result['title']}")
+
+#             st.session_state.vacancies_data = [v for v in vacancies_data if v is not None]
+#             st.success(f"Au fost încărcate {len(st.session_state.vacancies_data)} oferte de muncă!")
+            
+#         except Exception as e:
+#             st.error(f"Eroare la încărcarea ofertelor: {str(e)}")
+################################################################################################################################
+from concurrent.futures import ThreadPoolExecutor, as_completed
+
 def load_vacancies():
     base_url = "https://www.rabota.md/ru/companies/moldova-agroindbank#vacancies"
     headers = {'User-Agent': 'Mozilla/5.0'}
@@ -272,22 +308,30 @@ def load_vacancies():
             progress_bar = st.progress(0)
             status_text = st.empty()
 
-            # Use threading to speed up scraping
-            with ThreadPoolExecutor(max_workers=5) as executor:
-                results = list(executor.map(scrape_vacancy, urls))
-            
-            for i, result in enumerate(results):
-                if result:
-                    vacancies_data.append(result)
-                    progress = (i + 1) / len(urls)
-                    progress_bar.progress(progress)
-                    status_text.text(f"[{i+1}/{len(urls)}] Ofertă încărcată: {result['title']}")
+            total = len(urls)
+            done = 0
 
-            st.session_state.vacancies_data = [v for v in vacancies_data if v is not None]
-            st.success(f"Au fost încărcate {len(st.session_state.vacancies_data)} oferte de muncă!")
-            
+            with ThreadPoolExecutor(max_workers=5) as executor:
+                future_to_url = {executor.submit(scrape_vacancy, url): url for url in urls}
+                
+                for future in as_completed(future_to_url):
+                    result = future.result()
+                    if result:
+                        vacancies_data.append(result)
+                        done += 1
+                        progress_bar.progress(done / total)
+                        status_text.text(f"[{done}/{total}] Ofertă încărcată: {result['title']}")
+
+            st.session_state.vacancies_data = vacancies_data
+            st.success(f"Au fost încărcate {len(vacancies_data)} oferte de muncă!")
+
         except Exception as e:
             st.error(f"Eroare la încărcarea ofertelor: {str(e)}")
+##########################################################################################################################################
+
+
+
+
 
 if st.button("Încarcă ofertele de muncă pentru tine..."):
     load_vacancies()
