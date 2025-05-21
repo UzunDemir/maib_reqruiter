@@ -1280,7 +1280,7 @@ if not st.session_state.interview_started:
             st.session_state.questions = generate_interview_questions(documents[0])
             st.session_state.interview_started = True
         st.experimental_rerun()
-        return
+        
 
 if st.session_state.interview_started:
     st.success("Interviul a început! Vă rog să răspundeți la întrebările de mai jos.")
@@ -1309,6 +1309,7 @@ if st.session_state.interview_started:
         st.balloons()
         # Чтобы профиль сразу показался после окончания, перезапускаем
         st.experimental_rerun()
+        return
 
 if st.session_state.profile:
     st.markdown("## 📌 Profilul candidatului")
