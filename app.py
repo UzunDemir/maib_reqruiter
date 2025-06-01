@@ -851,7 +851,7 @@ if not st.session_state.tech_interview_started and st.session_state.interview_st
         with st.spinner("Pregătim întrebările tehnice..."):
             st.session_state.tech_questions = generate_technical_questions(documents[0])
             st.session_state.tech_interview_started = True
-        st.experimental_rerun()
+        st.rerun()
 
 # Форма технического интервью
 if st.session_state.tech_interview_started:
@@ -895,7 +895,8 @@ if st.session_state.tech_interview_started:
                 len(suspicious_flags)
             )
         st.success("Interviul tehnic s-a încheiat!")
-        st.experimental_rerun()
+        st.balloons()
+        st.rerun()
 
 # Вывод технического фидбека и финального вердикта
 if st.session_state.tech_feedback:
