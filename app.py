@@ -1498,3 +1498,162 @@ if st.session_state.profile:
 #         file_name="profil_candidat.docx",
 #         mime="application/vnd.openxmlformats-officedocument.wordprocessingml.document"
 #     )
+###########################################################################################################
+# --- Технические вопросы (генерация через LLM) ---
+def generate_technical_questions(cv_text):
+    prompt = f"""
+    Generează 5 întrebări tehnice specifice pe baza acestui CV:
+    {cv_text}
+
+    Întrebările trebuie să testeze competențele tehnice ale candidatului.
+    Returnează doar o listă numerotată de întrebări, fără alte explicații.
+    """
+    response = requests.post(
+        url,
+        headers=headers,
+        json={
+            "model": "deepseek-chat",
+            "messages": [{"role": "user", "content": prompt}],
+            "temperature": 0.3
+        }
+    )
+    return response.json()['choices'][0]['message']['content']
+
+# --- Генерация технического фидбека по ответам ---
+def generate_technical_feedback(questions, answers):
+    prompt = f"""
+    Pe baza următoarelor întrebări tehnice și răspunsuri, oferă un feedback detaliat și un scor evaluativ (0-10) pentru competențele tehnice ale candidatului.
+
+    Întrebări:
+    {questions}
+
+    Răspunsuri:
+    {answers}
+
+    Formatează răspunsul astfel:
+
+    Feedback detaliat:
+    [text]
+
+    Scor tehnic: [număr de la 0 la 10]
+    """
+    response = requests.post(
+        url,
+        headers=headers,
+        json={
+            "model": "deepseek-chat",
+            "messages": [{"role": "user", "content": prompt}],
+            "temperature": 0.2
+        }
+    )
+    return response.json()['choices'][0]['message']['content']
+
+# --- Итоговая рекомендация ---
+def generate_final_recommendation(profile, tech_feedback, ai_flags_count):
+    prompt = f"""
+    Având următorul profil al candidatului:
+
+    {profile}
+
+    Feedback tehnic:
+
+    {tech_feedback}
+
+    Număr de răspunsuri suspectate ca fiind generate de AI: {ai_flags_count}
+
+    Pe baza acestor informații, formulează o concluzie finală clară cu una din următoarele recomandări:
+    - Recomandare pentru angajare
+    - Recomandare cu rezerve
+    - Refuz argumentat
+
+    Include argumentele principale pentru decizie.
+    """
+    response = requests.post(
+        url,
+        headers=headers,
+        json={
+            "model": "deepseek-chat",
+            "messages": [{"role": "user", "content": prompt}],
+            "temperature": 0.2
+        }
+    )
+    return response.json()['choices'][0]['message']['content']
+
+# --- Streamlit UI ---
+
+st.title("🤖 AI HR-Recruiter: Interviu tehnic și concluzie finală")
+
+if 'tech_interview_started' not in st.session_state:
+    st.session_state.tech_interview_started = False
+    st.session_state.tech_questions = None
+    st.session_state.tech_answers = {}
+    st.session_state.tech_feedback = None
+    st.session_state.final_recommendation = None
+
+# Кнопка начала технического интервью
+if not st.session_state.tech_interview_started and st.session_state.interview_started:
+    if st.button("💻 Începe interviul tehnic"):
+        with st.spinner("Pregătim întrebările tehnice..."):
+            st.session_state.tech_questions = generate_technical_questions(documents[0])
+            st.session_state.tech_interview_started = True
+        st.experimental_rerun()
+
+# Форма технического интервью
+if st.session_state.tech_interview_started:
+    st.success("Interviul tehnic a început! Vă rugăm să răspundeți la întrebările de mai jos.")
+
+    tech_q_list = [q for q in st.session_state.tech_questions.split('\n') if q.strip()]
+    for i, question in enumerate(tech_q_list[:5]):
+        st.session_state.tech_answers[i] = st.text_area(
+            label=f"**{i+1}:** {question}",
+            value=st.session_state.tech_answers.get(i, ""),
+            key=f"tech_answer_{i}"
+        )
+
+    if st.button("✅ Finalizează interviul tehnic"):
+        with st.spinner("Analizăm răspunsurile tehnice..."):
+            formatted_tech_answers = "\n".join(
+                [
+                    f"{i+1}. {q}\n   Răspuns: {st.session_state.tech_answers.get(i, '').strip() or 'Nu a răspuns'}"
+                    for i, q in enumerate(tech_q_list[:5])
+                ]
+            )
+
+            # Анализ технических ответов через LLM
+            st.session_state.tech_feedback = generate_technical_feedback(
+                st.session_state.tech_questions,
+                formatted_tech_answers
+            )
+
+            # Проверка AI-сгенерированных ответов из всех этапов (здесь вызываем свою функцию)
+            suspicious_flags = []
+            all_answers = list(st.session_state.answers.values()) + list(st.session_state.tech_answers.values())
+            for idx, ans in enumerate(all_answers):
+                verdict = check_if_ai_generated(ans)
+                if 'ai' in verdict.lower():
+                    suspicious_flags.append((idx+1, verdict))
+
+            # Генерация итоговой рекомендации
+            st.session_state.final_recommendation = generate_final_recommendation(
+                st.session_state.profile,
+                st.session_state.tech_feedback,
+                len(suspicious_flags)
+            )
+        st.success("Interviul tehnic s-a încheiat!")
+        st.experimental_rerun()
+
+# Вывод технического фидбека и финального вердикта
+if st.session_state.tech_feedback:
+    st.markdown("## 💻 Feedback tehnic")
+    st.markdown(st.session_state.tech_feedback)
+
+if st.session_state.final_recommendation:
+    st.markdown("## 📋 Concluzia finală")
+    st.markdown(st.session_state.final_recommendation)
+
+    if st.button("🔄 Resetează procesul"):
+        for key in ['interview_started', 'questions', 'answers', 'profile',
+                    'tech_interview_started', 'tech_questions', 'tech_answers', 'tech_feedback', 'final_recommendation']:
+            if key in st.session_state:
+                del st.session_state[key]
+        st.experimental_rerun()
