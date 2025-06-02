@@ -213,7 +213,7 @@ with st.sidebar:
     # Process description
     st.markdown("""
     <div class="sidebar-text">
-    1. 📥 <strong>{}</strong>
+    1.  📥 <strong>{}</strong>
        <em>{}</em>
 
     2. 📄 <strong>{}</strong>  
