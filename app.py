@@ -1079,55 +1079,50 @@ if st.session_state.tech_interview_started:
         st.rerun()
 
 # Вывод технического фидбека и финального вердикта
-if st.session_state.tech_feedback:
-    st.markdown("## 💻 Feedback tehnic")
-    st.markdown(st.session_state.tech_feedback)
-
 if st.session_state.final_recommendation:
     st.markdown("## 📋 Concluzia finală")
     st.markdown(st.session_state.final_recommendation)
-
-    if st.button("🔄 Resetează procesul"):
-        for key in ['interview_started', 'questions', 'answers', 'profile',
-                    'tech_interview_started', 'tech_questions', 'tech_answers', 'tech_feedback', 'final_recommendation']:
-            if key in st.session_state:
-                del st.session_state[key]
-        st.rerun()
-
-        
-# Профиль кандидата
-if st.session_state.profile:
-    st.markdown("## 📌 Profilul candidatului")
-    st.markdown(st.session_state.profile)
-
-    # Создание и скачивание DOCX профиля кандидата
-    def create_word_document_profile(profile_text):
+    
+    # Создаем полный отчет для скачивания
+    def create_final_report():
         doc = Document()
+        
+        # Добавляем профиль
         doc.add_heading('Profil Candidat', 0)
-        for line in profile_text.split('\n'):
+        for line in st.session_state.profile.split('\n'):
             if line.strip():
                 if line.startswith('###'):
                     doc.add_heading(line.replace('###', '').strip(), level=2)
                 else:
                     doc.add_paragraph(line)
+        
+        # Добавляем технический фидбек
+        doc.add_heading('Feedback Tehnic', 1)
+        doc.add_paragraph(st.session_state.tech_feedback)
+        
+        # Добавляем заключение
+        doc.add_heading('Concluzie Finală', 1)
+        doc.add_paragraph(st.session_state.final_recommendation)
+        
         return doc
-
-    doc_profile = create_word_document_profile(st.session_state.profile)
-    bio_profile = io.BytesIO()
-    doc_profile.save(bio_profile)
-    bio_profile.seek(0)
-
-    # st.download_button(
-    #     label="💾 Descarcă profilul candidatului (DOCX)",
-    #     data=bio_profile,
-    #     file_name="profil_candidat.docx",
-    #     mime="application/vnd.openxmlformats-officedocument.wordprocessingml.document"
-    # )
+    
+    # Кнопка скачивания полного отчета
+    doc_report = create_final_report()
+    bio_report = io.BytesIO()
+    doc_report.save(bio_report)
+    bio_report.seek(0)
+    
     st.download_button(
-    label="💾 Descarcă profilul candidatului (DOCX)",
-    data=bio_profile,
-    file_name="profil_candidat.docx",
-    mime="application/vnd.openxmlformats-officedocument.wordprocessingml.document",
-    key="download_profile_docx"
-     )
+        label="💾 Descarcă raportul complet (DOCX)",
+        data=bio_report,
+        file_name="raport_interviu.docx",
+        mime="application/vnd.openxmlformats-officedocument.wordprocessingml.document"
+    )
 
+    if st.button("🔄 Resetează procesul"):
+        for key in ['interview_started', 'questions', 'answers', 'profile',
+                   'tech_interview_started', 'tech_questions', 'tech_answers', 
+                   'tech_feedback', 'final_recommendation']:
+            if key in st.session_state:
+                del st.session_state[key]
+        st.rerun()
