@@ -13,15 +13,13 @@ import numpy as np
 import docx
 from docx import Document
 import io
-
-from concurrent.futures import ThreadPoolExecutor
+from concurrent.futures import ThreadPoolExecutor, as_completed
 
 st.set_page_config(layout="wide", initial_sidebar_state="expanded")
 
 # --- Stiluri și bara laterală ---
 st.markdown("""
     <style>
-
         section[data-testid="stSidebar"] {
             background-color: #253646 !important;
         }
@@ -75,54 +73,41 @@ st.markdown("""
     </div>
 """, unsafe_allow_html=True)
 
-
 st.sidebar.markdown('<div class="sidebar-title">MAIB AI HR-Recruiter</div>', unsafe_allow_html=True)
 st.sidebar.divider()
 st.sidebar.markdown("""
 <div class="sidebar-text">
-
 1. 📥 **Încărcarea posturilor vacante**  
-
    *Agentul încarcă automat toate posturile vacante actuale de la MAIB.*
 
 2. 📄 **CV-ul utilizatorului**  
-
    *Utilizatorul își încarcă CV-ul pentru analiză.*
 
 3. 🤖 **Căutarea posturilor potrivite**  
-
    *Agentul analizează CV-ul și identifică **top 3 posturi** relevante pentru experiența și competențele candidatului.*
 
 4. 🔍 **Analiza celei mai relevante poziții**  
-
    * *Evidențiază **punctele forte** ale candidatului.*  
    * *Identifică **punctele slabe** sau lipsurile în competențe.*
 
 5. ✅ **Acordul candidatului**  
-
    *Dacă este interesat, candidatul își exprimă acordul pentru a continua procesul.*
 
 6. 🗣️ **Primul interviu (general)**  
-
    *Agentul pune întrebări generale, analizează răspunsurile și formulează **primele concluzii**.*
 
 7. ⚡ **Detectarea răspunsurilor generate de AI**    
-
    *Identificarea și verificarea textelor create automat pentru a asigura autenticitatea conținutului.*
 
 8. 💻 **Interviul tehnic**  
-
    *Evaluarea competențelor tehnice și furnizarea unui **feedback tehnic**.*
 
 9. 📋 **Concluzia finală**  
-
    *Agentul oferă un verdict final: **recomandare pentru angajare** sau **refuz argumentat**.*
-
 </div>
 """, unsafe_allow_html=True)
 
 st.divider()
-
 
 class DocumentChunk:
     def __init__(self, text, doc_name, page_num):
@@ -147,7 +132,7 @@ class KnowledgeBase:
         while start < len(text):
             end = min(start + max_chars, len(text))
             chunk = text[start:end].strip()
-            if chunk:  # Skip empty chunks
+            if chunk:
                 chunks.append(chunk)
             start = end
         return chunks
@@ -185,7 +170,7 @@ class KnowledgeBase:
             full_text = []
             for para in doc.paragraphs:
                 text = para.text.strip()
-                if text:  # Skip empty paragraphs
+                if text:
                     full_text.append(text)
             text = "\n".join(full_text)
             for chunk in self.split_text(text):
@@ -228,18 +213,12 @@ class KnowledgeBase:
     def get_all_text(self):
         return "\n\n".join(self.doc_texts)
 
-
-
-
-# Inițializare baza de cunoștințe
 if 'knowledge_base' not in st.session_state:
     st.session_state.knowledge_base = KnowledgeBase()
 
 if 'vacancies_data' not in st.session_state:
     st.session_state.vacancies_data = []
 
-##############################
-# Încărcare oferte de pe rabota.md
 def scrape_vacancy(url):
     try:
         headers = {'User-Agent': 'Mozilla/5.0'}
@@ -257,9 +236,6 @@ def scrape_vacancy(url):
     except Exception as e:
         st.error(f"Eroare la preluarea ofertei {url}: {str(e)}")
         return None
-
-#######################################################################################################################
-from concurrent.futures import ThreadPoolExecutor, as_completed
 
 def load_vacancies():
     base_url = "https://www.rabota.md/ru/companies/moldova-agroindbank#vacancies"
@@ -297,16 +273,10 @@ def load_vacancies():
 
         except Exception as e:
             st.error(f"Eroare la încărcarea ofertelor: {str(e)}")
-##########################################################################################################################################
-
-
-
-
 
 if st.button("Încarcă ofertele de muncă pentru tine..."):
     load_vacancies()
 
-# Afișare lista oferte în bara laterală
 if st.session_state.vacancies_data:
     with st.sidebar:
         st.markdown("### 🔎 Lista ofertelor MAIB:")
@@ -317,14 +287,12 @@ if st.session_state.vacancies_data:
                 unsafe_allow_html=True
             )
 
-##############################
-# Încărcare CV
 st.markdown("### 📄 Încărcă CV-ul tău (PDF, DOCX, TXT)")
 uploaded_files = st.file_uploader("Selectează fișier(e)", type=['pdf', 'docx', 'txt'], accept_multiple_files=True)
 
 if uploaded_files:
     kb = st.session_state.knowledge_base
-    kb.clear()  # Curăță conținutul anterior
+    kb.clear()
     
     progress_bar = st.progress(0)
     status_text = st.empty()
@@ -342,8 +310,6 @@ if not st.session_state.knowledge_base.uploaded_files:
     st.info("Te rugăm să încarci un CV pentru analiză")
     st.stop()
 
-##############################
-# Analiza potrivirilor
 st.markdown("### 🔍 Cele mai relevante oferte pentru CV-ul tău")
 
 cv_text = st.session_state.knowledge_base.get_all_text()
@@ -353,28 +319,59 @@ if not vacancies:
     st.warning("Nu există oferte de muncă disponibile. Te rugăm să încarci ofertele mai întâi.")
     st.stop()
 
-# Procesare avansată a textelor
 vacancy_texts = [f"{vac['title']}\n{vac['description']}" for vac in vacancies]
 documents = [cv_text] + vacancy_texts
 
-# TF-IDF îmbunătățit
-vectorizer = TfidfVectorizer(
-    stop_words=None,
-    ngram_range=(1, 2),  # Include bigrame pentru mai mult context
-    max_features=5000
-)
-##############################################################################
+try:
+    with st.spinner("Se analizează potrivirile..."):
+        vectorizer = TfidfVectorizer()
+        tfidf_matrix = vectorizer.fit_transform(documents)
+        similarity_scores = cosine_similarity(tfidf_matrix[0:1], tfidf_matrix[1:]).flatten()
 
+    score_min, score_max = similarity_scores.min(), similarity_scores.max()
+    if score_max - score_min > 0:
+        normalized_scores = (similarity_scores - score_min) / (score_max - score_min) * 100
+    else:
+        normalized_scores = np.zeros_like(similarity_scores)
 
-import numpy as np
-from sklearn.feature_extraction.text import TfidfVectorizer
-from sklearn.metrics.pairwise import cosine_similarity
-import streamlit as st
-import requests
-import io
-from docx import Document  # pip install python-docx
+    normalized_scores = np.clip(normalized_scores, 0, 100)
 
-################################
+    top_indices = similarity_scores.argsort()[::-1][:3]
+    st.session_state.top_indices = top_indices
+
+    for idx in top_indices:
+        vac = vacancies[idx]
+        score = normalized_scores[idx]
+
+        with st.container():
+            st.markdown(f"""
+            <div class="match-card">
+                <div class="match-header">
+                    <h3><a href="{vac['url']}" target="_blank" style="text-decoration:none; color:inherit;">{vac['title']}</a></h3>
+                    <h4>{score:.0f}% potrivire</h4>
+                </div>
+                <div class="progress-bar">
+                    <div class="progress-fill" style="width: {score}%"></div>
+                </div>
+            </div>
+            """, unsafe_allow_html=True)
+
+        st.write("---")
+
+except Exception as e:
+    st.error(f"Eroare la analiza potrivirilor: {str(e)}")
+
+api_key = st.secrets.get("DEEPSEEK_API_KEY")
+if not api_key:
+    st.error("API ключ не настроен. Пожалуйста, добавьте его в Secrets.")
+    st.stop()
+
+url = "https://api.deepseek.com/v1/chat/completions"
+headers = {
+    "Authorization": f"Bearer {api_key}",
+    "Content-Type": "application/json"
+}
+
 def check_if_ai_generated(answer_text):
     prompt = f"""
     Evaluează dacă următorul răspuns a fost generat de un om sau de o rețea neuronală (cum ar fi ChatGPT).
@@ -402,72 +399,11 @@ def check_if_ai_generated(answer_text):
     result = response.json()['choices'][0]['message']['content'].strip().lower()
     return result
 
-###########################################################
-
-
-
-
-# --- Анализ совпадений вакансий ---
-try:
-    with st.spinner("Se analizează potrivirile..."):
-        vectorizer = TfidfVectorizer()
-        tfidf_matrix = vectorizer.fit_transform(documents)
-        similarity_scores = cosine_similarity(tfidf_matrix[0:1], tfidf_matrix[1:]).flatten()
-
-    score_min, score_max = similarity_scores.min(), similarity_scores.max()
-    if score_max - score_min > 0:
-        normalized_scores = (similarity_scores - score_min) / (score_max - score_min) * 100
-    else:
-        normalized_scores = np.zeros_like(similarity_scores)
-
-    normalized_scores = np.clip(normalized_scores, 0, 100)
-
-    top_indices = similarity_scores.argsort()[::-1][:3]
-
-    # Сохраняем top_indices в сессию, чтобы использовать дальше
-    st.session_state.top_indices = top_indices
-
-    for idx in top_indices:
-        vac = vacancies[idx]
-        score = normalized_scores[idx]
-
-        with st.container():
-            st.markdown(f"""
-            <div class="match-card">
-                <div class="match-header">
-                    <h3><a href="{vac['url']}" target="_blank" style="text-decoration:none; color:inherit;">{vac['title']}</a></h3>
-                    <h4>{score:.0f}% potrivire</h4>
-                </div>
-                <div class="progress-bar">
-                    <div class="progress-fill" style="width: {score}%"></div>
-                </div>
-            </div>
-            """, unsafe_allow_html=True)
-
-        st.write("---")
-
-except Exception as e:
-    st.error(f"Eroare la analiza potrivirilor: {str(e)}")
-
-# --- Работа с Deepseek API ---
-api_key = st.secrets.get("DEEPSEEK_API_KEY")
-if not api_key:
-    st.error("API ключ не настроен. Пожалуйста, добавьте его в Secrets.")
-    st.stop()
-
-url = "https://api.deepseek.com/v1/chat/completions"
-headers = {
-    "Authorization": f"Bearer {api_key}",
-    "Content-Type": "application/json"
-}
-
-# Используем top_indices из сессии, если есть
 top_indices = st.session_state.get("top_indices", [])
 if len(top_indices) > 0:
     best_match_idx = top_indices[0]
     best_match_vacancy = vacancies[best_match_idx]
 
-    # Отображаем кнопку для генерации анализа
     if st.button("🔍 Generează analiza de potrivire"):
         prompt = f"""
         Analizează corespondența dintre CV-ul candidatului și oferta de muncă.
@@ -501,19 +437,15 @@ if len(top_indices) > 0:
 
                 result = response.json()
                 analysis = result['choices'][0]['message']['content']
-
-                # Сохраняем анализ в сессию, чтобы не пропадал
                 st.session_state.analysis = analysis
 
         except Exception as e:
             st.error(f"Ошибка при запросе к API: {str(e)}")
 
-# Показываем анализ, если он уже есть в сессии
 if 'analysis' in st.session_state and st.session_state.analysis:
     st.markdown("## 📊 Analiză detaliată a conformității")
     st.markdown(st.session_state.analysis)
 
-    # Кнопка для скачивания анализа в docx
     def create_word_document(text):
         doc = Document()
         doc.add_heading('Analiză detaliată a conformității', 0)
@@ -541,15 +473,12 @@ if 'analysis' in st.session_state and st.session_state.analysis:
 else:
     st.info("Apăsați butonul pentru a genera analiza de potrivire.")
 
-# --- Интервью ---
-
 def generate_interview_questions(cv_text):
     prompt = f"""
     Generează 10 întrebări pentru un interviu introductiv pe baza acestui CV:
     {cv_text}
 
     Cerințe:
-
     1. 3 întrebări despre experiența profesională
     2. 2 întrebări despre abilitățile tehnice
     3. 1 întrebare despre punctele slabe
@@ -558,7 +487,6 @@ def generate_interview_questions(cv_text):
     6. 2 întrebări biografice
 
     Întrebările trebuie să fie specifice și legate de CV
-
     Returnează doar o listă numerotată de întrebări, fără explicații suplimentare.
     """
 
@@ -581,7 +509,6 @@ def generate_candidate_profile(questions, answers):
     {questions}
 
     Răspunsuri:
-
     {answers}
 
     Структура профиля:
@@ -620,7 +547,6 @@ def generate_candidate_profile(questions, answers):
 
 st.title("🤖 AI HR-Recruiter: Interviu introductiv")
 
-# Инициализация состояния интервью
 if 'interview_started' not in st.session_state:
     st.session_state.interview_started = False
     st.session_state.questions = None
@@ -633,7 +559,6 @@ if not st.session_state.interview_started:
             st.session_state.questions = generate_interview_questions(documents[0])
             st.session_state.interview_started = True
         st.rerun()
-        
 
 if st.session_state.interview_started:
     st.success("Interviul a început! Vă rog să răspundeți la întrebările de mai jos.")
@@ -646,46 +571,7 @@ if st.session_state.interview_started:
             key=f"answer_{i}"
         )
 
-    # if st.button("✅ Interviul s-a încheiat", type="primary"):
-    #     with st.spinner("Analizăm răspunsurile..."):
-    #         formatted_answers = "\n".join(
-    #             [f"{i+1}. {q}\n   Ответ: {st.session_state.answers[i]}"
-    #              for i, q in enumerate(questions_list[:10])]
-    #         )
-
-    #         st.session_state.profile = generate_candidate_profile(
-    #             st.session_state.questions,
-    #             formatted_answers
-    #         )
-
-    #     st.success("Interviul s-a încheiat!")
-    #     st.balloons()
-    #     # Чтобы профиль сразу показался после окончания, перезапускаем
-    #     st.rerun()
-    
-    # if st.button("✅ Interviul s-a încheiat", type="primary"):
-    
-    #     with st.spinner("Analizăm răspunsurile..."):
-    #         questions_list = [q for q in st.session_state.questions.split('\n') if q.strip()]
-            
-    #         formatted_answers = "\n".join(
-    #             [
-    #                 f"{i+1}. {q}\n   Ответ: {st.session_state.answers.get(i, '').strip() or 'Candidatul nu a putut răspunde la această întrebare'}"
-    #                 for i, q in enumerate(questions_list[:10])
-    #             ]
-    #         )
-    
-    #         st.session_state.profile = generate_candidate_profile(
-    #             st.session_state.questions,
-    #             formatted_answers
-    #         )
-
-    #     st.success("Interviul s-a încheiat!")
-    #     st.balloons()
-    #     st.rerun()
-
     if st.button("✅ Interviul s-a încheiat", type="primary"):
-    
         with st.spinner("Analizăm răspunsurile..."):
             questions_list = [q for q in st.session_state.questions.split('\n') if q.strip()]
             
@@ -696,20 +582,19 @@ if st.session_state.interview_started:
                 ]
             )
     
-            # 🧠 Проверка на ИИ-сгенерированные ответы
             suspicious_flags = []
             for i, q in enumerate(questions_list[:10]):
                 answer = st.session_state.answers.get(i, '').strip()
-                verdict = check_if_ai_generated(answer)  # Используй свою LLM-функцию
-                if 'ai' in verdict.lower():
-                    suspicious_flags.append((i+1, verdict))
+                if answer:  # Only check non-empty answers
+                    verdict = check_if_ai_generated(answer)
+                    if 'ai' in verdict.lower():
+                        suspicious_flags.append((i+1, verdict))
     
             if suspicious_flags:
                 st.warning("🚨 Unele răspunsuri par a fi generate de AI:")
                 for q_num, reason in suspicious_flags:
                     st.markdown(f"- Întrebarea {q_num}: răspuns suspectat ca fiind generat de AI")
     
-            # 🧾 Генерация профиля кандидата
             st.session_state.profile = generate_candidate_profile(
                 st.session_state.questions,
                 formatted_answers
@@ -719,42 +604,6 @@ if st.session_state.interview_started:
         st.balloons()
         st.rerun()
 
-
-    
-
-      
-
-if st.session_state.profile:
-    st.markdown("## 📌 Profilul candidatului")
-    st.markdown(st.session_state.profile)
-
-    # Создание и скачивание DOCX профиля кандидата
-    def create_word_document_profile(profile_text):
-        doc = Document()
-        doc.add_heading('Profil Candidat', 0)
-        for line in profile_text.split('\n'):
-            if line.strip():
-                if line.startswith('###'):
-                    doc.add_heading(line.replace('###', '').strip(), level=2)
-                else:
-                    doc.add_paragraph(line)
-        return doc
-
-    doc_profile = create_word_document_profile(st.session_state.profile)
-    bio_profile = io.BytesIO()
-    doc_profile.save(bio_profile)
-    bio_profile.seek(0)
-
-    st.download_button(
-        label="💾 Descarcă profilul candidatului (DOCX)",
-        data=bio_profile,
-        file_name="profil_candidat.docx",
-        mime="application/vnd.openxmlformats-officedocument.wordprocessingml.document"
-    )
-
-
-###########################################################################################################
-# --- Технические вопросы (генерация через LLM) ---
 def generate_technical_questions(cv_text):
     prompt = f"""
     Generează 5 întrebări tehnice specifice pe baza acestui CV:
@@ -774,7 +623,6 @@ def generate_technical_questions(cv_text):
     )
     return response.json()['choices'][0]['message']['content']
 
-# --- Генерация технического фидбека по ответам ---
 def generate_technical_feedback(questions, answers):
     prompt = f"""
     Pe baza următoarelor întrebări tehnice și răspunsuri, oferă un feedback detaliat și un scor evaluativ (0-10) pentru competențele tehnice ale candidatului.
@@ -803,15 +651,12 @@ def generate_technical_feedback(questions, answers):
     )
     return response.json()['choices'][0]['message']['content']
 
-# --- Итоговая рекомендация ---
 def generate_final_recommendation(profile, tech_feedback, ai_flags_count):
     prompt = f"""
     Având următorul profil al candidatului:
-
     {profile}
 
     Feedback tehnic:
-
     {tech_feedback}
 
     Număr de răspunsuri suspectate ca fiind generate de AI: {ai_flags_count}
@@ -834,8 +679,6 @@ def generate_final_recommendation(profile, tech_feedback, ai_flags_count):
     )
     return response.json()['choices'][0]['message']['content']
 
-# --- Streamlit UI ---
-
 st.title("🤖 AI HR-Recruiter: Interviu tehnic și concluzie finală")
 
 if 'tech_interview_started' not in st.session_state:
@@ -845,7 +688,6 @@ if 'tech_interview_started' not in st.session_state:
     st.session_state.tech_feedback = None
     st.session_state.final_recommendation = None
 
-# Кнопка начала технического интервью
 if not st.session_state.tech_interview_started and st.session_state.interview_started:
     if st.button("💻 Începe interviul tehnic"):
         with st.spinner("Pregătim întrebările tehnice..."):
@@ -853,7 +695,6 @@ if not st.session_state.tech_interview_started and st.session_state.interview_st
             st.session_state.tech_interview_started = True
         st.rerun()
 
-# Форма технического интервью
 if st.session_state.tech_interview_started:
     st.success("Interviul tehnic a început! Vă rugăm să răspundeți la întrebările de mai jos.")
 
@@ -874,21 +715,19 @@ if st.session_state.tech_interview_started:
                 ]
             )
 
-            # Анализ технических ответов через LLM
             st.session_state.tech_feedback = generate_technical_feedback(
                 st.session_state.tech_questions,
                 formatted_tech_answers
             )
 
-            # Проверка AI-сгенерированных ответов из всех этапов (здесь вызываем свою функцию)
             suspicious_flags = []
             all_answers = list(st.session_state.answers.values()) + list(st.session_state.tech_answers.values())
             for idx, ans in enumerate(all_answers):
-                verdict = check_if_ai_generated(ans)
-                if 'ai' in verdict.lower():
-                    suspicious_flags.append((idx+1, verdict))
+                if ans.strip():  # Only check non-empty answers
+                    verdict = check_if_ai_generated(ans)
+                    if 'ai' in verdict.lower():
+                        suspicious_flags.append((idx+1, verdict))
 
-            # Генерация итоговой рекомендации
             st.session_state.final_recommendation = generate_final_recommendation(
                 st.session_state.profile,
                 st.session_state.tech_feedback,
@@ -898,7 +737,6 @@ if st.session_state.tech_interview_started:
         st.balloons()
         st.rerun()
 
-# Вывод технического фидбека и финального вердикта
 if st.session_state.tech_feedback:
     st.markdown("## 💻 Feedback tehnic")
     st.markdown(st.session_state.tech_feedback)
@@ -914,13 +752,10 @@ if st.session_state.final_recommendation:
                 del st.session_state[key]
         st.rerun()
 
-        
-# Профиль кандидата
 if st.session_state.profile:
     st.markdown("## 📌 Profilul candidatului")
     st.markdown(st.session_state.profile)
 
-    # Создание и скачивание DOCX профиля кандидата
     def create_word_document_profile(profile_text):
         doc = Document()
         doc.add_heading('Profil Candidat', 0)
