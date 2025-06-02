@@ -214,8 +214,8 @@ with st.sidebar:
     st.markdown("""
     <div class="sidebar-text">
     
-    1. 📥 <strong>{}</strong>
-       <em>{}</em>
+    1. 📥 <strong>{}</strong>  
+   <em>{}</em>
 
     2. 📄 <strong>{}</strong>  
        <em>{}</em>
