@@ -213,30 +213,31 @@ with st.sidebar:
     # Process description
     st.markdown("""
     <div class="sidebar-text">
+    
     1. 📥 <strong>{}</strong>
        <em>{}</em>
 
     2. 📄 <strong>{}</strong>  
        <em>{}</em>
-    
+
     3. 🤖 <strong>{}</strong>  
        <em>{}</em>
-    
+
     4. 🔍 <strong>{}</strong>  
        <em>{}<br>{}</em>
-    
+
     5. ✅ <strong>{}</strong>  
        <em>{}</em>
-    
+
     6. 🗣️ <strong>{}</strong>  
        <em>{}</em>
-    
+
     7. ⚡ <strong>{}</strong>    
        <em>{}</em>
-    
+
     8. 💻 <strong>{}</strong>  
        <em>{}</em>
-    
+
     9. 📋 <strong>{}</strong>  
        <em>{}</em>
     </div>
