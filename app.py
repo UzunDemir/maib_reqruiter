@@ -493,8 +493,8 @@ uploaded_files = st.file_uploader(get_translation('upload_cv'), type=['pdf', 'do
 ####################################################################################
 # Vacancies list in alphabetical order
 if 'vacancies_data' in st.session_state and st.session_state.vacancies_data:
-    st.divider()
-    st.markdown(f"### 🔎 {get_translation('vacancies_list')}")
+    st.sidebar.divider()
+    st.sidebar.markdown(f"### 🔎 {get_translation('vacancies_list')}")
     st.success(f"Oferte găsite: {len(st.session_state.vacancies_data)}" if st.session_state.language == 'rom' else 
              f"Найдено вакансий: {len(st.session_state.vacancies_data)}" if st.session_state.language == 'rus' else 
              f"Found vacancies: {len(st.session_state.vacancies_data)}")
