@@ -913,3 +913,33 @@ if st.session_state.final_recommendation:
             if key in st.session_state:
                 del st.session_state[key]
         st.rerun()
+
+        
+# Профиль кандидата
+if st.session_state.profile:
+    st.markdown("## 📌 Profilul candidatului")
+    st.markdown(st.session_state.profile)
+
+    # Создание и скачивание DOCX профиля кандидата
+    def create_word_document_profile(profile_text):
+        doc = Document()
+        doc.add_heading('Profil Candidat', 0)
+        for line in profile_text.split('\n'):
+            if line.strip():
+                if line.startswith('###'):
+                    doc.add_heading(line.replace('###', '').strip(), level=2)
+                else:
+                    doc.add_paragraph(line)
+        return doc
+
+    doc_profile = create_word_document_profile(st.session_state.profile)
+    bio_profile = io.BytesIO()
+    doc_profile.save(bio_profile)
+    bio_profile.seek(0)
+
+    st.download_button(
+        label="💾 Descarcă profilul candidatului (DOCX)",
+        data=bio_profile,
+        file_name="profil_candidat.docx",
+        mime="application/vnd.openxmlformats-officedocument.wordprocessingml.document"
+    )
