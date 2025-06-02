@@ -541,3 +541,585 @@ vectorizer = TfidfVectorizer(
     ngram_range=(1, 2),  # Include bigrame pentru mai mult context
     max_features=5000
 )
+
+##############################################################################
+################################
+def check_if_ai_generated(answer_text):
+    prompt = f"""
+    Evaluează dacă următorul răspuns a fost generat de un om sau de o rețea neuronală (cum ar fi ChatGPT).
+
+    Răspuns:
+    \"\"\"
+    {answer_text}
+    \"\"\"
+
+    Răspunde doar cu una dintre opțiuni:
+    - uman
+    - AI
+    """
+
+    response = requests.post(
+        url,
+        headers=headers,
+        json={
+            "model": "deepseek-chat",
+            "messages": [{"role": "user", "content": prompt}],
+            "temperature": 0.2
+        }
+    )
+
+    result = response.json()['choices'][0]['message']['content'].strip().lower()
+    return result
+
+###########################################################
+
+
+
+
+# --- Анализ совпадений вакансий ---
+try:
+    with st.spinner("Se analizează potrivirile..."):
+        vectorizer = TfidfVectorizer()
+        tfidf_matrix = vectorizer.fit_transform(documents)
+        similarity_scores = cosine_similarity(tfidf_matrix[0:1], tfidf_matrix[1:]).flatten()
+
+    score_min, score_max = similarity_scores.min(), similarity_scores.max()
+    if score_max - score_min > 0:
+        normalized_scores = (similarity_scores - score_min) / (score_max - score_min) * 100
+    else:
+        normalized_scores = np.zeros_like(similarity_scores)
+
+    normalized_scores = np.clip(normalized_scores, 0, 100)
+
+    top_indices = similarity_scores.argsort()[::-1][:3]
+
+    # Сохраняем top_indices в сессию, чтобы использовать дальше
+    st.session_state.top_indices = top_indices
+
+    for idx in top_indices:
+        vac = vacancies[idx]
+        score = normalized_scores[idx]
+
+        with st.container():
+            st.markdown(f"""
+            <div class="match-card">
+                <div class="match-header">
+                    <h3><a href="{vac['url']}" target="_blank" style="text-decoration:none; color:inherit;">{vac['title']}</a></h3>
+                    <h4>{score:.0f}% potrivire</h4>
+                </div>
+                <div class="progress-bar">
+                    <div class="progress-fill" style="width: {score}%"></div>
+                </div>
+            </div>
+            """, unsafe_allow_html=True)
+
+        st.write("---")
+
+except Exception as e:
+    st.error(f"Eroare la analiza potrivirilor: {str(e)}")
+
+# --- API Configuration ---
+api_key = st.secrets.get("DEEPSEEK_API_KEY")
+if not api_key:
+    st.error("API ключ не настроен. Пожалуйста, добавьте его в Secrets.")
+    st.stop()
+
+url = "https://api.deepseek.com/v1/chat/completions"
+headers = {
+    "Authorization": f"Bearer {api_key}",
+    "Content-Type": "application/json"
+}
+
+# [Rest of your code with AI-generated content remains the same]
+# [Previous implementations of check_if_ai_generated, generate_interview_questions, etc.]
+
+# --- Update all UI elements to use get_translation() ---
+# For example:
+# st.button(get_translation('generate_analysis'))
+# st.markdown(f"## 📊 {get_translation('detailed_analysis')}")
+# etc.
+
+# [Continue with the rest of your application code, replacing all UI text with get_translation() calls]
+
+# Используем top_indices из сессии, если есть
+top_indices = st.session_state.get("top_indices", [])
+if len(top_indices) > 0:
+    best_match_idx = top_indices[0]
+    best_match_vacancy = vacancies[best_match_idx]
+
+    # Отображаем кнопку для генерации анализа
+    if st.button("🔍 Generează analiza de potrivire"):
+        prompt = f"""
+        Analizează corespondența dintre CV-ul candidatului și oferta de muncă.
+        Mai întâi voi furniza CV-ul, apoi descrierea postului.
+
+        CV-ul candidatului:
+        {cv_text}
+        
+        Descrierea postului:
+        {best_match_vacancy['description']}
+        
+        Vă rog să efectuați analiza conform următoarei structuri:
+
+        1. Punctele forte ale CV-ului (potrivirea exactă cu cerințele postului)
+        2. Punctele slabe sau lacunele din CV (unde candidatul nu corespunde)
+        3. Recomandări concrete pentru îmbunătățirea CV-ului în vederea acestei poziții
+        4. Procentajul general de potrivire (evaluat pe o scară de la 0 la 100%)
+        5. Fiți cât mai concret, citați cerințele specifice din descrierea postului și punctele din CV.
+        """
+
+        try:
+            with st.spinner("Generăm o analiză detaliată…"):
+                data = {
+                    "model": "deepseek-chat",
+                    "messages": [{"role": "user", "content": prompt}],
+                    "temperature": 0.3
+                }
+
+                response = requests.post(url, headers=headers, json=data)
+                response.raise_for_status()
+
+                result = response.json()
+                analysis = result['choices'][0]['message']['content']
+
+                # Сохраняем анализ в сессию, чтобы не пропадал
+                st.session_state.analysis = analysis
+
+        except Exception as e:
+            st.error(f"Ошибка при запросе к API: {str(e)}")
+
+# Показываем анализ, если он уже есть в сессии
+if 'analysis' in st.session_state and st.session_state.analysis:
+    st.markdown("## 📊 Analiză detaliată a conformității")
+    st.markdown(st.session_state.analysis)
+
+    # Кнопка для скачивания анализа в docx
+    def create_word_document(text):
+        doc = Document()
+        doc.add_heading('Analiză detaliată a conformității', 0)
+        for line in text.split('\n'):
+            if line.strip():
+                if line.startswith('##'):
+                    doc.add_heading(line.replace('##', '').strip(), level=1)
+                elif line.startswith('#'):
+                    doc.add_heading(line.replace('#', '').strip(), level=2)
+                else:
+                    doc.add_paragraph(line)
+        return doc
+
+    doc = create_word_document(st.session_state.analysis)
+    bio = io.BytesIO()
+    doc.save(bio)
+    bio.seek(0)
+
+    st.download_button(
+        label="💾 Descarcă analiza (DOCX)",
+        data=bio,
+        file_name="analiza_potrivire.docx",
+        mime="application/vnd.openxmlformats-officedocument.wordprocessingml.document"
+    )
+else:
+    st.info("Apăsați butonul pentru a genera analiza de potrivire.")
+
+# --- Интервью ---
+
+def generate_interview_questions(cv_text):
+    prompt = f"""
+    Generează 10 întrebări pentru un interviu introductiv pe baza acestui CV:
+    {cv_text}
+
+    Cerințe:
+
+    1. 3 întrebări despre experiența profesională
+    2. 2 întrebări despre abilitățile tehnice
+    3. 1 întrebare despre punctele slabe
+    4. 1 întrebare despre motivație
+    5. 1 întrebare despre așteptările salariale
+    6. 2 întrebări biografice
+
+    Întrebările trebuie să fie specifice și legate de CV
+
+    Returnează doar o listă numerotată de întrebări, fără explicații suplimentare.
+    """
+
+    response = requests.post(
+        url,
+        headers=headers,
+        json={
+            "model": "deepseek-chat",
+            "messages": [{"role": "user", "content": prompt}],
+            "temperature": 0.3
+        }
+    )
+    return response.json()['choices'][0]['message']['content']
+
+def generate_candidate_profile(questions, answers):
+    prompt = f"""
+    Pe baza acestor întrebări și răspunsuri, creează un profil al candidatului:
+
+    Întrebări:
+    {questions}
+
+    Răspunsuri:
+
+    {answers}
+
+    Структура профиля:
+    ### 🧑‍💻 Portret profesional
+    - Competențe principale
+    - Experiență relevantă
+    - Expertiză tehnică
+
+    ### 🎯 Motivație și obiective
+    - Interese profesionale
+    - Așteptări de la job
+
+    ### 📈 Puncte forte
+    - Avantaje cheie
+    - Competențe unice
+
+    ### ⚠️ Zone de dezvoltare
+    - Puncte slabe
+    - Competențe de îmbunătățit
+
+    ### 💰 Așteptări privind compensația
+    - Așteptări salariale
+    - Disponibilitate pentru negociere
+    """
+
+    response = requests.post(
+        url,
+        headers=headers,
+        json={
+            "model": "deepseek-chat",
+            "messages": [{"role": "user", "content": prompt}],
+            "temperature": 0.2
+        }
+    )
+    return response.json()['choices'][0]['message']['content']
+
+st.title("🤖 AI HR-Recruiter: Interviu introductiv")
+
+# Инициализация состояния интервью
+if 'interview_started' not in st.session_state:
+    st.session_state.interview_started = False
+    st.session_state.questions = None
+    st.session_state.answers = {}
+    st.session_state.profile = None
+
+if not st.session_state.interview_started:
+    if st.button("🎤 A trece interviul introductiv", type="primary"):
+        with st.spinner("Pregătim întrebările..."):
+            st.session_state.questions = generate_interview_questions(documents[0])
+            st.session_state.interview_started = True
+        st.rerun()
+        
+
+if st.session_state.interview_started:
+    st.success("Interviul a început! Vă rog să răspundeți la întrebările de mai jos.")
+
+    questions_list = [q for q in st.session_state.questions.split('\n') if q.strip()]
+    for i, question in enumerate(questions_list[:10]):
+        st.session_state.answers[i] = st.text_area(
+            label=f"**{i+1}:** {question}",
+            value=st.session_state.answers.get(i, ""),
+            key=f"answer_{i}"
+        )
+
+    # if st.button("✅ Interviul s-a încheiat", type="primary"):
+    #     with st.spinner("Analizăm răspunsurile..."):
+    #         formatted_answers = "\n".join(
+    #             [f"{i+1}. {q}\n   Ответ: {st.session_state.answers[i]}"
+    #              for i, q in enumerate(questions_list[:10])]
+    #         )
+
+    #         st.session_state.profile = generate_candidate_profile(
+    #             st.session_state.questions,
+    #             formatted_answers
+    #         )
+
+    #     st.success("Interviul s-a încheiat!")
+    #     st.balloons()
+    #     # Чтобы профиль сразу показался после окончания, перезапускаем
+    #     st.rerun()
+    
+    # if st.button("✅ Interviul s-a încheiat", type="primary"):
+    
+    #     with st.spinner("Analizăm răspunsurile..."):
+    #         questions_list = [q for q in st.session_state.questions.split('\n') if q.strip()]
+            
+    #         formatted_answers = "\n".join(
+    #             [
+    #                 f"{i+1}. {q}\n   Ответ: {st.session_state.answers.get(i, '').strip() or 'Candidatul nu a putut răspunde la această întrebare'}"
+    #                 for i, q in enumerate(questions_list[:10])
+    #             ]
+    #         )
+    
+    #         st.session_state.profile = generate_candidate_profile(
+    #             st.session_state.questions,
+    #             formatted_answers
+    #         )
+
+    #     st.success("Interviul s-a încheiat!")
+    #     st.balloons()
+    #     st.rerun()
+
+    if st.button("✅ Interviul s-a încheiat", type="primary"):
+    
+        with st.spinner("Analizăm răspunsurile..."):
+            questions_list = [q for q in st.session_state.questions.split('\n') if q.strip()]
+            
+            formatted_answers = "\n".join(
+                [
+                    f"{i+1}. {q}\n   Ответ: {st.session_state.answers.get(i, '').strip() or 'Candidatul nu a putut răspunde la această întrebare'}"
+                    for i, q in enumerate(questions_list[:10])
+                ]
+            )
+    
+            # 🧠 Проверка на ИИ-сгенерированные ответы
+            suspicious_flags = []
+            for i, q in enumerate(questions_list[:10]):
+                answer = st.session_state.answers.get(i, '').strip()
+                verdict = check_if_ai_generated(answer)  # Используй свою LLM-функцию
+                if 'ai' in verdict.lower():
+                    suspicious_flags.append((i+1, verdict))
+    
+            if suspicious_flags:
+                st.warning("🚨 Unele răspunsuri par a fi generate de AI:")
+                for q_num, reason in suspicious_flags:
+                    st.markdown(f"- Întrebarea {q_num}: răspuns suspectat ca fiind generat de AI")
+    
+            # 🧾 Генерация профиля кандидата
+            st.session_state.profile = generate_candidate_profile(
+                st.session_state.questions,
+                formatted_answers
+            )
+    
+        st.success("Interviul s-a încheiat!")
+        st.balloons()
+        st.rerun()
+
+
+    
+
+      
+
+if st.session_state.profile:
+    st.markdown("## 📌 Profilul candidatului")
+    st.markdown(st.session_state.profile)
+
+    # Создание и скачивание DOCX профиля кандидата
+    def create_word_document_profile(profile_text):
+        doc = Document()
+        doc.add_heading('Profil Candidat', 0)
+        for line in profile_text.split('\n'):
+            if line.strip():
+                if line.startswith('###'):
+                    doc.add_heading(line.replace('###', '').strip(), level=2)
+                else:
+                    doc.add_paragraph(line)
+        return doc
+
+    doc_profile = create_word_document_profile(st.session_state.profile)
+    bio_profile = io.BytesIO()
+    doc_profile.save(bio_profile)
+    bio_profile.seek(0)
+
+    st.download_button(
+        label="💾 Descarcă profilul candidatului (DOCX)",
+        data=bio_profile,
+        file_name="profil_candidat.docx",
+        mime="application/vnd.openxmlformats-officedocument.wordprocessingml.document"
+    )
+
+
+###########################################################################################################
+# --- Технические вопросы (генерация через LLM) ---
+def generate_technical_questions(cv_text):
+    prompt = f"""
+    Generează 5 întrebări tehnice specifice pe baza acestui CV:
+    {cv_text}
+
+    Întrebările trebuie să testeze competențele tehnice ale candidatului.
+    Returnează doar o listă numerotată de întrebări, fără alte explicații.
+    """
+    response = requests.post(
+        url,
+        headers=headers,
+        json={
+            "model": "deepseek-chat",
+            "messages": [{"role": "user", "content": prompt}],
+            "temperature": 0.3
+        }
+    )
+    return response.json()['choices'][0]['message']['content']
+
+# --- Генерация технического фидбека по ответам ---
+def generate_technical_feedback(questions, answers):
+    prompt = f"""
+    Pe baza următoarelor întrebări tehnice și răspunsuri, oferă un feedback detaliat și un scor evaluativ (0-10) pentru competențele tehnice ale candidatului.
+
+    Întrebări:
+    {questions}
+
+    Răspunsuri:
+    {answers}
+
+    Formatează răspunsul astfel:
+
+    Feedback detaliat:
+    [text]
+
+    Scor tehnic: [număr de la 0 la 10]
+    """
+    response = requests.post(
+        url,
+        headers=headers,
+        json={
+            "model": "deepseek-chat",
+            "messages": [{"role": "user", "content": prompt}],
+            "temperature": 0.2
+        }
+    )
+    return response.json()['choices'][0]['message']['content']
+
+# --- Итоговая рекомендация ---
+def generate_final_recommendation(profile, tech_feedback, ai_flags_count):
+    prompt = f"""
+    Având următorul profil al candidatului:
+
+    {profile}
+
+    Feedback tehnic:
+
+    {tech_feedback}
+
+    Număr de răspunsuri suspectate ca fiind generate de AI: {ai_flags_count}
+
+    Pe baza acestor informații, formulează o concluzie finală clară cu una din următoarele recomandări:
+    - Recomandare pentru angajare
+    - Recomandare cu rezerve
+    - Refuz argumentat
+
+    Include argumentele principale pentru decizie.
+    """
+    response = requests.post(
+        url,
+        headers=headers,
+        json={
+            "model": "deepseek-chat",
+            "messages": [{"role": "user", "content": prompt}],
+            "temperature": 0.2
+        }
+    )
+    return response.json()['choices'][0]['message']['content']
+
+# --- Streamlit UI ---
+
+st.title("🤖 AI HR-Recruiter: Interviu tehnic și concluzie finală")
+
+if 'tech_interview_started' not in st.session_state:
+    st.session_state.tech_interview_started = False
+    st.session_state.tech_questions = None
+    st.session_state.tech_answers = {}
+    st.session_state.tech_feedback = None
+    st.session_state.final_recommendation = None
+
+# Кнопка начала технического интервью
+if not st.session_state.tech_interview_started and st.session_state.interview_started:
+    if st.button("💻 Începe interviul tehnic"):
+        with st.spinner("Pregătim întrebările tehnice..."):
+            st.session_state.tech_questions = generate_technical_questions(documents[0])
+            st.session_state.tech_interview_started = True
+        st.rerun()
+
+# Форма технического интервью
+if st.session_state.tech_interview_started:
+    st.success("Interviul tehnic a început! Vă rugăm să răspundeți la întrebările de mai jos.")
+
+    tech_q_list = [q for q in st.session_state.tech_questions.split('\n') if q.strip()]
+    for i, question in enumerate(tech_q_list[:5]):
+        st.session_state.tech_answers[i] = st.text_area(
+            label=f"**{i+1}:** {question}",
+            value=st.session_state.tech_answers.get(i, ""),
+            key=f"tech_answer_{i}"
+        )
+
+    if st.button("✅ Finalizează interviul tehnic"):
+        with st.spinner("Analizăm răspunsurile tehnice..."):
+            formatted_tech_answers = "\n".join(
+                [
+                    f"{i+1}. {q}\n   Răspuns: {st.session_state.tech_answers.get(i, '').strip() or 'Nu a răspuns'}"
+                    for i, q in enumerate(tech_q_list[:5])
+                ]
+            )
+
+            # Анализ технических ответов через LLM
+            st.session_state.tech_feedback = generate_technical_feedback(
+                st.session_state.tech_questions,
+                formatted_tech_answers
+            )
+
+            # Проверка AI-сгенерированных ответов из всех этапов (здесь вызываем свою функцию)
+            suspicious_flags = []
+            all_answers = list(st.session_state.answers.values()) + list(st.session_state.tech_answers.values())
+            for idx, ans in enumerate(all_answers):
+                verdict = check_if_ai_generated(ans)
+                if 'ai' in verdict.lower():
+                    suspicious_flags.append((idx+1, verdict))
+
+            # Генерация итоговой рекомендации
+            st.session_state.final_recommendation = generate_final_recommendation(
+                st.session_state.profile,
+                st.session_state.tech_feedback,
+                len(suspicious_flags)
+            )
+        st.success("Interviul tehnic s-a încheiat!")
+        st.balloons()
+        st.rerun()
+
+# Вывод технического фидбека и финального вердикта
+if st.session_state.tech_feedback:
+    st.markdown("## 💻 Feedback tehnic")
+    st.markdown(st.session_state.tech_feedback)
+
+if st.session_state.final_recommendation:
+    st.markdown("## 📋 Concluzia finală")
+    st.markdown(st.session_state.final_recommendation)
+
+    if st.button("🔄 Resetează procesul"):
+        for key in ['interview_started', 'questions', 'answers', 'profile',
+                    'tech_interview_started', 'tech_questions', 'tech_answers', 'tech_feedback', 'final_recommendation']:
+            if key in st.session_state:
+                del st.session_state[key]
+        st.rerun()
+
+        
+# Профиль кандидата
+if st.session_state.profile:
+    st.markdown("## 📌 Profilul candidatului")
+    st.markdown(st.session_state.profile)
+
+    # Создание и скачивание DOCX профиля кандидата
+    def create_word_document_profile(profile_text):
+        doc = Document()
+        doc.add_heading('Profil Candidat', 0)
+        for line in profile_text.split('\n'):
+            if line.strip():
+                if line.startswith('###'):
+                    doc.add_heading(line.replace('###', '').strip(), level=2)
+                else:
+                    doc.add_paragraph(line)
+        return doc
+
+    doc_profile = create_word_document_profile(st.session_state.profile)
+    bio_profile = io.BytesIO()
+    doc_profile.save(bio_profile)
+    bio_profile.seek(0)
+
+    st.download_button(
+        label="💾 Descarcă profilul candidatului (DOCX)",
+        data=bio_profile,
+        file_name="profil_candidat.docx",
+        mime="application/vnd.openxmlformats-officedocument.wordprocessingml.document"
+    )
