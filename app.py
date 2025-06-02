@@ -414,6 +414,10 @@ if 'knowledge_base' not in st.session_state:
 if 'vacancies_data' not in st.session_state:
     st.session_state.vacancies_data = []
 
+if st.button(get_translation('load_vacancies')):
+    load_vacancies()  # Эта функция должна сохранять данные в st.session_state.vacancies_data
+    st.rerun()  # Добавьте это, чтобы сразу обновить интерфейс
+
 # --- Scrape vacancies function remains the same ---
 # [Previous scrape_vacancy and load_vacancies functions]
 ###########################################################################################
