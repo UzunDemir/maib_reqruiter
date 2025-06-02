@@ -1117,9 +1117,17 @@ if st.session_state.profile:
     doc_profile.save(bio_profile)
     bio_profile.seek(0)
 
+    # st.download_button(
+    #     label="💾 Descarcă profilul candidatului (DOCX)",
+    #     data=bio_profile,
+    #     file_name="profil_candidat.docx",
+    #     mime="application/vnd.openxmlformats-officedocument.wordprocessingml.document"
+    # )
     st.download_button(
-        label="💾 Descarcă profilul candidatului (DOCX)",
-        data=bio_profile,
-        file_name="profil_candidat.docx",
-        mime="application/vnd.openxmlformats-officedocument.wordprocessingml.document"
-    )
+    label="💾 Descarcă profilul candidatului (DOCX)",
+    data=bio_profile,
+    file_name="profil_candidat.docx",
+    mime="application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+    key="download_profile_docx"
+     )
+
