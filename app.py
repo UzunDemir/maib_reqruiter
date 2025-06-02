@@ -185,7 +185,8 @@ with st.sidebar:
     language = st.radio("Language / Язык / Limbă:", 
                        ["rom", "rus", "en"],
                        index=["rom", "rus", "en"].index(st.session_state.language),
-                       key="lang_selector")
+                       key="lang_selector",
+                       horizontal=True)
     
     if language != st.session_state.language:
         st.session_state.language = language
