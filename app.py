@@ -176,3 +176,125 @@ st.markdown(f"""
     </div>
 """, unsafe_allow_html=True)
 
+
+# --- Sidebar Content ---
+with st.sidebar:
+    st.markdown('<div class="sidebar-title">{}</div>'.format(get_translation('sidebar_title')), unsafe_allow_html=True)
+    
+    # Language selector
+    language = st.radio("Language / Язык / Limbă:", 
+                       ["rom", "rus", "en"],
+                       index=["rom", "rus", "en"].index(st.session_state.language),
+                       key="lang_selector")
+    
+    if language != st.session_state.language:
+        st.session_state.language = language
+        st.rerun()
+    
+    st.divider()
+    
+    # Current step indicator
+    current_step = 1
+    if 'knowledge_base' in st.session_state and st.session_state.knowledge_base.uploaded_files:
+        current_step = 2
+    if 'analysis' in st.session_state and st.session_state.analysis:
+        current_step = 3
+    if 'profile' in st.session_state and st.session_state.profile:
+        current_step = 4
+    if 'final_recommendation' in st.session_state and st.session_state.final_recommendation:
+        current_step = 5
+    
+    st.markdown(f'<div class="current-step">{get_translation("current_step")} {current_step}/5</div>', unsafe_allow_html=True)
+    st.markdown(f"- {get_translation(f'step{current_step}')}")
+    
+    st.divider()
+    
+    # Process description
+    st.markdown("""
+    <div class="sidebar-text">
+    1. 📥 <strong>{}</strong>  
+       <em>{}</em>
+
+    2. 📄 <strong>{}</strong>  
+       <em>{}</em>
+
+    3. 🤖 <strong>{}</strong>  
+       <em>{}</em>
+
+    4. 🔍 <strong>{}</strong>  
+       <em>{}<br>{}</em>
+
+    5. ✅ <strong>{}</strong>  
+       <em>{}</em>
+
+    6. 🗣️ <strong>{}</strong>  
+       <em>{}</em>
+
+    7. ⚡ <strong>{}</strong>    
+       <em>{}</em>
+
+    8. 💻 <strong>{}</strong>  
+       <em>{}</em>
+
+    9. 📋 <strong>{}</strong>  
+       <em>{}</em>
+    </div>
+    """.format(
+        get_translation('step1'), "Agentul încarcă automat toate posturile vacante actuale de la MAIB." if st.session_state.language == 'rom' else 
+        "Агент автоматически загружает все текущие вакансии MAIB." if st.session_state.language == 'rus' else 
+        "The agent automatically loads all current MAIB vacancies.",
+        
+        get_translation('step2'), "Utilizatorul își încarcă CV-ul pentru analiză." if st.session_state.language == 'rom' else 
+        "Пользователь загружает свое резюме для анализа." if st.session_state.language == 'rus' else 
+        "The user uploads their CV for analysis.",
+        
+        get_translation('step3'), "Agentul analizează CV-ul și identifică top 3 posturi relevante." if st.session_state.language == 'rom' else 
+        "Агент анализирует резюме и определяет топ-3 подходящих вакансий." if st.session_state.language == 'rus' else 
+        "The agent analyzes the CV and identifies top 3 relevant positions.",
+        
+        get_translation('step4'), "Evidențiază punctele forte ale candidatului." if st.session_state.language == 'rom' else 
+        "Выделяет сильные стороны кандидата." if st.session_state.language == 'rus' else 
+        "Highlights the candidate's strengths.",
+        
+        "Identifică punctele slabe sau lipsurile în competențe." if st.session_state.language == 'rom' else 
+        "Определяет слабые стороны или пробелы в навыках." if st.session_state.language == 'rus' else 
+        "Identifies weaknesses or skill gaps.",
+        
+        get_translation('step5'), "Dacă este interesat, candidatul își exprimă acordul pentru a continua procesul." if st.session_state.language == 'rom' else 
+        "Если заинтересован, кандидат выражает согласие продолжить процесс." if st.session_state.language == 'rus' else 
+        "If interested, the candidate agrees to continue the process.",
+        
+        get_translation('step3'), "Agentul pune întrebări generale, analizează răspunsurile și formulează primele concluzii." if st.session_state.language == 'rom' else 
+        "Агент задает общие вопросы, анализирует ответы и формулирует первые выводы." if st.session_state.language == 'rus' else 
+        "The agent asks general questions, analyzes responses and formulates initial conclusions.",
+        
+        get_translation('step4'), "Identificarea și verificarea textelor create automat pentru a asigura autenticitatea conținutului." if st.session_state.language == 'rom' else 
+        "Выявление и проверка автоматически созданных текстов для обеспечения подлинности." if st.session_state.language == 'rus' else 
+        "Identifying and verifying automatically generated text to ensure content authenticity.",
+        
+        get_translation('step4'), "Evaluarea competențelor tehnice și furnizarea unui feedback tehnic." if st.session_state.language == 'rom' else 
+        "Оценка технических навыков и предоставление технического отзыва." if st.session_state.language == 'rus' else 
+        "Assessing technical skills and providing technical feedback.",
+        
+        get_translation('step5'), "Agentul oferă un verdict final: recomandare pentru angajare sau refuz argumentat." if st.session_state.language == 'rom' else 
+        "Агент выносит окончательный вердикт: рекомендация к найму или обоснованный отказ." if st.session_state.language == 'rus' else 
+        "The agent provides a final verdict: hiring recommendation or justified refusal."
+    ), unsafe_allow_html=True)
+
+    # Vacancies list in alphabetical order
+    if 'vacancies_data' in st.session_state and st.session_state.vacancies_data:
+        st.divider()
+        st.markdown(f"### 🔎 {get_translation('vacancies_list')}")
+        st.success(f"Oferte găsite: {len(st.session_state.vacancies_data)}" if st.session_state.language == 'rom' else 
+                 f"Найдено вакансий: {len(st.session_state.vacancies_data)}" if st.session_state.language == 'rus' else 
+                 f"Found vacancies: {len(st.session_state.vacancies_data)}")
+        
+        # Sort vacancies alphabetically
+        sorted_vacancies = sorted(st.session_state.vacancies_data, key=lambda x: x['title'])
+        for vac in sorted_vacancies:
+            st.markdown(
+                f'<a href="{vac["url"]}" target="_blank" style="color:#40c1ac; text-decoration:none;">• {vac["title"]}</a>',
+                unsafe_allow_html=True
+            )
+
+st.divider()
