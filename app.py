@@ -482,6 +482,7 @@ def load_vacancies():
 
 if st.button(get_translation('load_vacancies')):
     load_vacancies()
+    st.rerun()
 
 # --- CV Upload Section ---
 st.markdown(f"### 📄 {get_translation('upload_cv')}")
