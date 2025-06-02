@@ -828,43 +828,7 @@ if st.session_state.interview_started:
             key=f"answer_{i}"
         )
 
-    # if st.button("✅ Interviul s-a încheiat", type="primary"):
-    #     with st.spinner("Analizăm răspunsurile..."):
-    #         formatted_answers = "\n".join(
-    #             [f"{i+1}. {q}\n   Ответ: {st.session_state.answers[i]}"
-    #              for i, q in enumerate(questions_list[:10])]
-    #         )
-
-    #         st.session_state.profile = generate_candidate_profile(
-    #             st.session_state.questions,
-    #             formatted_answers
-    #         )
-
-    #     st.success("Interviul s-a încheiat!")
-    #     st.balloons()
-    #     # Чтобы профиль сразу показался после окончания, перезапускаем
-    #     st.rerun()
-    
-    # if st.button("✅ Interviul s-a încheiat", type="primary"):
-    
-    #     with st.spinner("Analizăm răspunsurile..."):
-    #         questions_list = [q for q in st.session_state.questions.split('\n') if q.strip()]
-            
-    #         formatted_answers = "\n".join(
-    #             [
-    #                 f"{i+1}. {q}\n   Ответ: {st.session_state.answers.get(i, '').strip() or 'Candidatul nu a putut răspunde la această întrebare'}"
-    #                 for i, q in enumerate(questions_list[:10])
-    #             ]
-    #         )
-    
-    #         st.session_state.profile = generate_candidate_profile(
-    #             st.session_state.questions,
-    #             formatted_answers
-    #         )
-
-    #     st.success("Interviul s-a încheiat!")
-    #     st.balloons()
-    #     st.rerun()
+    ########################################################################################
 
     if st.button("✅ Interviul s-a încheiat", type="primary"):
     
