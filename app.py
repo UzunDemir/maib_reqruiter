@@ -204,6 +204,22 @@ with st.sidebar:
         current_step = 4
     if 'final_recommendation' in st.session_state and st.session_state.final_recommendation:
         current_step = 5
+
+    # Vacancies list in alphabetical order
+    if 'vacancies_data' in st.session_state and st.session_state.vacancies_data:
+        st.divider()
+        st.markdown(f"### 🔎 {get_translation('vacancies_list')}")
+        st.success(f"Oferte găsite: {len(st.session_state.vacancies_data)}" if st.session_state.language == 'rom' else 
+                 f"Найдено вакансий: {len(st.session_state.vacancies_data)}" if st.session_state.language == 'rus' else 
+                 f"Found vacancies: {len(st.session_state.vacancies_data)}")
+        
+        # Sort vacancies alphabetically
+        sorted_vacancies = sorted(st.session_state.vacancies_data, key=lambda x: x['title'])
+        for vac in sorted_vacancies:
+            st.markdown(
+                f'<a href="{vac["url"]}" target="_blank" style="color:#40c1ac; text-decoration:none;">• {vac["title"]}</a>',
+                unsafe_allow_html=True
+            )
     
     st.markdown(f'<div class="current-step">{get_translation("current_step")} {current_step}/5</div>', unsafe_allow_html=True)
     st.markdown(f"- {get_translation(f'step{current_step}')}")
@@ -283,9 +299,7 @@ with st.sidebar:
         "The agent provides a final verdict: hiring recommendation or justified refusal."
     ), unsafe_allow_html=True)
 
-    if st.button(get_translation('load_vacancies')):
-    load_vacancies()  # Эта функция должна сохранять данные в st.session_state.vacancies_data
-    st.rerun()
+    
     # Vacancies list in alphabetical order
     if 'vacancies_data' in st.session_state and st.session_state.vacancies_data:
         st.divider()
