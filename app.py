@@ -529,7 +529,7 @@ if not vacancies:
     st.stop()
 
 # Analiza potrivirilor
-st.markdown("### 🔍 Cele mai relevante oferte pentru CV-ul tău")
+#st.markdown("### 🔍 Cele mai relevante oferte pentru CV-ul tău")
 
 cv_text = st.session_state.knowledge_base.get_all_text()
 vacancies = st.session_state.vacancies_data
