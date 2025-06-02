@@ -520,3 +520,24 @@ if not vacancies:
               "Нет доступных вакансий. Пожалуйста, сначала загрузите вакансии." if st.session_state.language == 'rus' else
               "No job vacancies available. Please load vacancies first.")
     st.stop()
+
+# Analiza potrivirilor
+st.markdown("### 🔍 Cele mai relevante oferte pentru CV-ul tău")
+
+cv_text = st.session_state.knowledge_base.get_all_text()
+vacancies = st.session_state.vacancies_data
+
+if not vacancies:
+    st.warning("Nu există oferte de muncă disponibile. Te rugăm să încarci ofertele mai întâi.")
+    st.stop()
+
+# Procesare avansată a textelor
+vacancy_texts = [f"{vac['title']}\n{vac['description']}" for vac in vacancies]
+documents = [cv_text] + vacancy_texts
+
+# TF-IDF îmbunătățit
+vectorizer = TfidfVectorizer(
+    stop_words=None,
+    ngram_range=(1, 2),  # Include bigrame pentru mai mult context
+    max_features=5000
+)
