@@ -484,8 +484,8 @@ def load_vacancies():
             st.error(f"Eroare la încărcarea ofertelor: {str(e)}")
 ##########################################################################################################################################
 
-if st.button(get_translation('load_vacancies')):
-    load_vacancies()
+# if st.button(get_translation('load_vacancies')):
+#     load_vacancies()
 
 # --- CV Upload Section ---
 st.markdown(f"### 📄 {get_translation('upload_cv')}")
