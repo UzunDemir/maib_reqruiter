@@ -404,3 +404,119 @@ class KnowledgeBase:
     def get_all_text(self):
         return "\n\n".join(self.doc_texts)
 #########################################################
+
+# --- Initialize knowledge base ---
+if 'knowledge_base' not in st.session_state:
+    st.session_state.knowledge_base = KnowledgeBase()
+
+if 'vacancies_data' not in st.session_state:
+    st.session_state.vacancies_data = []
+
+# --- Scrape vacancies function remains the same ---
+# [Previous scrape_vacancy and load_vacancies functions]
+###########################################################################################
+##############################
+# Încărcare oferte de pe rabota.md
+def scrape_vacancy(url):
+    try:
+        headers = {'User-Agent': 'Mozilla/5.0'}
+        resp = requests.get(url, headers=headers, timeout=10)
+        resp.raise_for_status()
+        soup_vac = BeautifulSoup(resp.text, 'html.parser')
+
+        title_tag = soup_vac.find('h1')
+        title = title_tag.get_text(strip=True) if title_tag else 'Titlu indisponibil'
+
+        vacancy_content = soup_vac.find('div', class_='vacancy-content')
+        description = vacancy_content.get_text(separator='\n', strip=True) if vacancy_content else 'Descriere indisponibilă'
+
+        return {'url': url, 'title': title, 'description': description}
+    except Exception as e:
+        st.error(f"Eroare la preluarea ofertei {url}: {str(e)}")
+        return None
+
+#######################################################################################################################
+from concurrent.futures import ThreadPoolExecutor, as_completed
+
+def load_vacancies():
+    base_url = "https://www.rabota.md/ru/companies/moldova-agroindbank#vacancies"
+    headers = {'User-Agent': 'Mozilla/5.0'}
+    
+    with st.spinner("Se încarcă ofertele de muncă..."):
+        try:
+            response = requests.get(base_url, headers=headers, timeout=10)
+            response.raise_for_status()
+            soup = BeautifulSoup(response.text, 'html.parser')
+
+            links = soup.find_all('a', class_='vacancyShowPopup')
+            urls = [urljoin(base_url, a['href']) for a in links]
+
+            vacancies_data = []
+            progress_bar = st.progress(0)
+            status_text = st.empty()
+
+            total = len(urls)
+            done = 0
+
+            with ThreadPoolExecutor(max_workers=5) as executor:
+                future_to_url = {executor.submit(scrape_vacancy, url): url for url in urls}
+                
+                for future in as_completed(future_to_url):
+                    result = future.result()
+                    if result:
+                        vacancies_data.append(result)
+                        done += 1
+                        progress_bar.progress(done / total)
+                        status_text.text(f"[{done}/{total}] Ofertă încărcată: {result['title']}")
+
+            st.session_state.vacancies_data = vacancies_data
+            st.success(f"Au fost încărcate {len(vacancies_data)} oferte de muncă!")
+
+        except Exception as e:
+            st.error(f"Eroare la încărcarea ofertelor: {str(e)}")
+##########################################################################################################################################
+
+if st.button(get_translation('load_vacancies')):
+    load_vacancies()
+
+# --- CV Upload Section ---
+st.markdown(f"### 📄 {get_translation('upload_cv')}")
+uploaded_files = st.file_uploader(get_translation('upload_cv'), type=['pdf', 'docx', 'txt'], accept_multiple_files=True)
+
+if uploaded_files:
+    kb = st.session_state.knowledge_base
+    kb.clear()
+    
+    progress_bar = st.progress(0)
+    status_text = st.empty()
+    
+    for i, uploaded_file in enumerate(uploaded_files):
+        success = kb.load_file(uploaded_file)
+        progress = (i + 1) / len(uploaded_files)
+        progress_bar.progress(progress)
+        status_text.text(f"Se procesează fișierul {i+1}/{len(uploaded_files)}: {uploaded_file.name}" if st.session_state.language == 'rom' else
+                        f"Обрабатывается файл {i+1}/{len(uploaded_files)}: {uploaded_file.name}" if st.session_state.language == 'rus' else
+                        f"Processing file {i+1}/{len(uploaded_files)}: {uploaded_file.name}")
+    
+    st.session_state.knowledge_base = kb
+    st.success(f"Au fost încărcate {len(uploaded_files)} fișiere!" if st.session_state.language == 'rom' else
+              f"Загружено файлов: {len(uploaded_files)}" if st.session_state.language == 'rus' else
+              f"Uploaded files: {len(uploaded_files)}")
+
+if not st.session_state.knowledge_base.uploaded_files:
+    st.info("Te rugăm să încarci un CV pentru analiză" if st.session_state.language == 'rom' else
+           "Пожалуйста, загрузите резюме для анализа" if st.session_state.language == 'rus' else
+           "Please upload a CV for analysis")
+    st.stop()
+
+# --- Best Matches Section ---
+st.markdown(f"### 🔍 {get_translation('best_matches')}")
+
+cv_text = st.session_state.knowledge_base.get_all_text()
+vacancies = st.session_state.vacancies_data
+
+if not vacancies:
+    st.warning("Nu există oferte de muncă disponibile. Te rugăm să încarci ofertele mai întâi." if st.session_state.language == 'rom' else
+              "Нет доступных вакансий. Пожалуйста, сначала загрузите вакансии." if st.session_state.language == 'rus' else
+              "No job vacancies available. Please load vacancies first.")
+    st.stop()
