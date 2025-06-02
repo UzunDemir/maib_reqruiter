@@ -1079,9 +1079,26 @@ if st.session_state.tech_interview_started:
         st.rerun()
 
 # Вывод технического фидбека и финального вердикта
+if st.session_state.tech_feedback:
+    st.markdown("## 💻 Feedback tehnic")
+    st.markdown(st.session_state.tech_feedback)
+
 if st.session_state.final_recommendation:
     st.markdown("## 📋 Concluzia finală")
     st.markdown(st.session_state.final_recommendation)
+
+    if st.button("🔄 Resetează procesul"):
+        for key in ['interview_started', 'questions', 'answers', 'profile',
+                    'tech_interview_started', 'tech_questions', 'tech_answers', 'tech_feedback', 'final_recommendation']:
+            if key in st.session_state:
+                del st.session_state[key]
+        st.rerun()
+
+
+# # Вывод технического фидбека и финального вердикта
+# if st.session_state.final_recommendation:
+#     st.markdown("## 📋 Concluzia finală")
+#     st.markdown(st.session_state.final_recommendation)
     
     # Создаем полный отчет для скачивания
     def create_final_report():
