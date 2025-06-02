@@ -490,7 +490,23 @@ if st.button(get_translation('load_vacancies')):
 # --- CV Upload Section ---
 st.markdown(f"### 📄 {get_translation('upload_cv')}")
 uploaded_files = st.file_uploader(get_translation('upload_cv'), type=['pdf', 'docx', 'txt'], accept_multiple_files=True)
-
+####################################################################################
+# Vacancies list in alphabetical order
+if 'vacancies_data' in st.session_state and st.session_state.vacancies_data:
+    st.divider()
+    st.markdown(f"### 🔎 {get_translation('vacancies_list')}")
+    st.success(f"Oferte găsite: {len(st.session_state.vacancies_data)}" if st.session_state.language == 'rom' else 
+             f"Найдено вакансий: {len(st.session_state.vacancies_data)}" if st.session_state.language == 'rus' else 
+             f"Found vacancies: {len(st.session_state.vacancies_data)}")
+    
+    # Sort vacancies alphabetically
+    sorted_vacancies = sorted(st.session_state.vacancies_data, key=lambda x: x['title'])
+    for vac in sorted_vacancies:
+        st.markdown(
+            f'<a href="{vac["url"]}" target="_blank" style="color:#40c1ac; text-decoration:none;">• {vac["title"]}</a>',
+            unsafe_allow_html=True
+        )
+####################################################################################
 if uploaded_files:
     kb = st.session_state.knowledge_base
     kb.clear()
