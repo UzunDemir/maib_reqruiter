@@ -108,68 +108,71 @@ def get_translation(key):
             'step5': 'Final Conclusion'
         }
     }
-    return translations[st.session_state.language].get(key, key)
+    lang = st.session_state.get('language', 'rom')
+    return translations.get(lang, translations['rom']).get(key, key)
+
 
 # --- Stiluri și bara laterală ---
-st.markdown("""
+st.markdown(f"""
     <style>
-        section[data-testid="stSidebar"] {
+        section[data-testid="stSidebar"] {{
             background-color: #253646 !important;
-        }
-        .sidebar-title {
+        }}
+        .sidebar-title {{
             color: white;
             font-size: 24px;
             font-weight: bold;
             text-align: center;
             margin-bottom: 1rem;
-        }
-        .sidebar-text {
+        }}
+        .sidebar-text {{
             color: white;
-        }
-        #MainMenu, footer, header {
+        }}
+        #MainMenu, footer, header {{
             display: none !important;
-        }
-        .center {
+        }}
+        .center {{
             display: flex;
             justify-content: center;
             align-items: center;
             text-align: center;
             flex-direction: column;
             margin-top: 0vh;
-        }
-        .match-card {
+        }}
+        .match-card {{
             border-radius: 10px;
             padding: 15px;
             margin-bottom: 15px;
             background-color: #f0f2f6;
-        }
-        .match-header {
+        }}
+        .match-header {{
             display: flex;
             justify-content: space-between;
             align-items: center;
-        }
-        .progress-bar {
+        }}
+        .progress-bar {{
             height: 10px;
             background-color: #e0e0e0;
             border-radius: 5px;
             margin-top: 5px;
-        }
-        .progress-fill {
+        }}
+        .progress-fill {{
             height: 100%;
             border-radius: 5px;
             background-color: #40c1ac;
-        }
-        .current-step {
+        }}
+        .current-step {{
             background-color: #40c1ac;
             color: white;
             padding: 10px;
             border-radius: 5px;
             margin-top: 10px;
             font-weight: bold;
-        }
+        }}
     </style>
     <div class="center">
         <img src="https://www.maib.md/uploads/custom_blocks/image_1633004921_8nR1jw3Qfu_auto__0.png" width="300">
-        <h1>{}</h1>
+        <h1>{get_translation('app_title')}</h1>
     </div>
-""".format(get_translation('app_title')), unsafe_allow_html=True)
+""", unsafe_allow_html=True)
+
