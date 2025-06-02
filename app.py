@@ -283,6 +283,9 @@ with st.sidebar:
         "The agent provides a final verdict: hiring recommendation or justified refusal."
     ), unsafe_allow_html=True)
 
+    if st.button(get_translation('load_vacancies')):
+    load_vacancies()  # Эта функция должна сохранять данные в st.session_state.vacancies_data
+    st.rerun()
     # Vacancies list in alphabetical order
     if 'vacancies_data' in st.session_state and st.session_state.vacancies_data:
         st.divider()
