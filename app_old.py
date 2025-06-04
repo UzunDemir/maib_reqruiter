@@ -497,13 +497,6 @@ class KnowledgeBase:
 if "knowledge_base" not in st.session_state:
     st.session_state.knowledge_base = KnowledgeBase()
 
-# # Пример данных вакансий (замени на свои реальные данные)
-# vacancies_data = [
-#     {"title": "Software Developer", "description": "We are looking for a Python developer with experience in ML.", "url": "https://example.com/dev"},
-#     {"title": "Data Analyst", "description": "Candidate should know SQL, Excel and BI tools.", "url": "https://example.com/analyst"},
-#     {"title": "DevOps Engineer", "description": "Looking for someone with AWS and CI/CD experience.", "url": "https://example.com/devops"},
-#     {"title": "Frontend Developer", "description": "React.js knowledge is a must. Experience with Tailwind is a plus.", "url": "https://example.com/frontend"}
-# ]
 
 # Интерфейс загрузки файлов
 uploaded_files = st.file_uploader(
@@ -586,9 +579,6 @@ data = {
     "max_tokens": 1000,
     "temperature": 0.2
 }
-
-# Здесь дальше будет вызов API или другое действие с data
-
 
 
 # Кнопка очистки чата
