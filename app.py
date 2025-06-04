@@ -417,8 +417,7 @@ if 'vacancies_data' not in st.session_state:
     st.session_state.vacancies_data = []
 
 
-# --- Scrape vacancies function remains the same ---
-###########################################################################################
+
 ##############################
 # Încărcare oferte de pe rabota.md
 def scrape_vacancy(url):
@@ -1049,71 +1048,7 @@ if st.session_state.tech_interview_started:
         st.balloons()
         st.rerun()
 
-# # Вывод технического фидбека и финального вердикта
-# if st.session_state.tech_feedback:
-#     st.markdown("## 💻 Feedback tehnic")
-#     st.markdown(st.session_state.tech_feedback)
 
-# if st.session_state.final_recommendation:
-#     st.markdown("## 📋 Concluzia finală")
-#     st.markdown(st.session_state.final_recommendation)
-
-#     if st.button("🔄 Resetează procesul"):
-#         for key in ['interview_started', 'questions', 'answers', 'profile',
-#                     'tech_interview_started', 'tech_questions', 'tech_answers', 'tech_feedback', 'final_recommendation']:
-#             if key in st.session_state:
-#                 del st.session_state[key]
-#         st.rerun()
-
-
-# # # Вывод технического фидбека и финального вердикта
-# # if st.session_state.final_recommendation:
-# #     st.markdown("## 📋 Concluzia finală")
-# #     st.markdown(st.session_state.final_recommendation)
-    
-#     # Создаем полный отчет для скачивания
-#     def create_final_report():
-#         doc = Document()
-        
-#         # Добавляем профиль
-#         doc.add_heading('Profil Candidat', 0)
-#         for line in st.session_state.profile.split('\n'):
-#             if line.strip():
-#                 if line.startswith('###'):
-#                     doc.add_heading(line.replace('###', '').strip(), level=2)
-#                 else:
-#                     doc.add_paragraph(line)
-        
-#         # Добавляем технический фидбек
-#         doc.add_heading('Feedback Tehnic', 1)
-#         doc.add_paragraph(st.session_state.tech_feedback)
-        
-#         # Добавляем заключение
-#         doc.add_heading('Concluzie Finală', 1)
-#         doc.add_paragraph(st.session_state.final_recommendation)
-        
-#         return doc
-    
-#     # Кнопка скачивания полного отчета
-#     doc_report = create_final_report()
-#     bio_report = io.BytesIO()
-#     doc_report.save(bio_report)
-#     bio_report.seek(0)
-    
-#     st.download_button(
-#         label="💾 Descarcă raportul complet (DOCX)",
-#         data=bio_report,
-#         file_name="raport_interviu.docx",
-#         mime="application/vnd.openxmlformats-officedocument.wordprocessingml.document"
-#     )
-
-#     if st.button("🔄 Resetează procesul"):
-#         for key in ['interview_started', 'questions', 'answers', 'profile',
-#                    'tech_interview_started', 'tech_questions', 'tech_answers', 
-#                    'tech_feedback', 'final_recommendation']:
-#             if key in st.session_state:
-#                 del st.session_state[key]
-#         st.rerun()
 
 
 # --- После завершения технического интервью ---
