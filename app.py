@@ -541,7 +541,7 @@ if not vacancies:
 vacancy_texts = [f"{vac['title']}\n{vac['description']}" for vac in vacancies]
 documents = [cv_text] + vacancy_texts
 
-# TF-IDF îmbunătățit
+# TF-IDF
 vectorizer = TfidfVectorizer(
     stop_words=None,
     ngram_range=(1, 2),  # Include bigrame pentru mai mult context
@@ -636,16 +636,6 @@ headers = {
     "Content-Type": "application/json"
 }
 
-# [Rest of your code with AI-generated content remains the same]
-# [Previous implementations of check_if_ai_generated, generate_interview_questions, etc.]
-
-# --- Update all UI elements to use get_translation() ---
-# For example:
-# st.button(get_translation('generate_analysis'))
-# st.markdown(f"## 📊 {get_translation('detailed_analysis')}")
-# etc.
-
-# [Continue with the rest of your application code, replacing all UI text with get_translation() calls]
 
 # Используем top_indices из сессии, если есть
 top_indices = st.session_state.get("top_indices", [])
