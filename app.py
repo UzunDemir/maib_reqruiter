@@ -171,7 +171,7 @@ st.markdown(f"""
         }}
     </style>
     <div class="center">
-        <img src="https://www.maib.md/uploads/custom_blocks/image_1633004921_8nR1jw3Qfu_auto__0.png" width="300">
+        <img src="https://www.maib.md/images/logo.svg" width="300">
         <h1>{get_translation('app_title')}</h1>
     </div>
 """, unsafe_allow_html=True)
