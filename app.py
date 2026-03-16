@@ -114,7 +114,6 @@ def get_translation(key):
 
 
 # --- Stiluri și bara laterală ---
-# --- Stiluri și bara laterală ---
 st.markdown(f"""
     <style>
         /* 1. ПОЛНОЕ СКРЫТИЕ ХЕДЕРА (кроме стрелки сайдбара) */
@@ -127,13 +126,18 @@ st.markdown(f"""
         [data-testid="stSidebarCollapseButton"] {{
             visibility: visible !important;
         }}
+        /* Цвет стрелки */
+        [data-testid="stSidebarCollapseButton"] svg {{
+            fill: white !important;
+            color: white !important;
+        }}
         
-        /* Убираем лишний отступ сверху, чтобы контент не "висел" */
+        /* Убираем лишний отступ сверху */
         .block-container {{
             padding-top: 1rem !important;
         }}
 
-        /* 2. СУЩЕСТВУЮЩИЕ СТИЛИ */
+        /* 2. ВАШИ СТИЛИ */
         section[data-testid="stSidebar"] {{
             background-color: #253646 !important;
         }}
@@ -158,36 +162,12 @@ st.markdown(f"""
             flex-direction: column;
             margin-top: 0vh;
         }}
-        .match-card {{
-            border-radius: 10px;
-            padding: 15px;
-            margin-bottom: 15px;
-            background-color: #f0f2f6;
-        }}
-        .match-header {{
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-        }}
-        .progress-bar {{
-            height: 10px;
-            background-color: #e0e0e0;
-            border-radius: 5px;
-            margin-top: 5px;
-        }}
-        .progress-fill {{
-            height: 100%;
-            border-radius: 5px;
-            background-color: #40c1ac;
-        }}
-        .current-step {{
-            background-color: #40c1ac;
-            color: white;
-            padding: 10px;
-            border-radius: 5px;
-            margin-top: 10px;
-            font-weight: bold;
-        }}
+        /* ... остальные ваши стили (match-card, progress-bar и т.д.) ... */
+        .match-card {{ border-radius: 10px; padding: 15px; margin-bottom: 15px; background-color: #f0f2f6; }}
+        .match-header {{ display: flex; justify-content: space-between; align-items: center; }}
+        .progress-bar {{ height: 10px; background-color: #e0e0e0; border-radius: 5px; margin-top: 5px; }}
+        .progress-fill {{ height: 100%; border-radius: 5px; background-color: #40c1ac; }}
+        .current-step {{ background-color: #40c1ac; color: white; padding: 10px; border-radius: 5px; margin-top: 10px; font-weight: bold; }}
     </style>
     <div class="center">
         <img src="https://www.maib.md/images/logo.svg" width="300">
