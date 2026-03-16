@@ -128,8 +128,14 @@ st.markdown(f"""
         .sidebar-text {{
             color: white;
         }}
-        #MainMenu, footer, header {{
+        /* Убираем скрытие header, чтобы оставить кнопку для боковой панели */
+        #MainMenu, footer {{
             display: none !important;
+        }}
+        /* Оставляем header видимым */
+        header {{
+            visibility: visible !important;
+            display: block !important;
         }}
         .center {{
             display: flex;
