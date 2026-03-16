@@ -128,7 +128,7 @@ st.markdown(f"""
         .sidebar-text {{
             color: white;
         }}
-        #MainMenu, footer, header {{
+        #MainMenu, footer {{
             display: none !important;
         }}
         .center {{
