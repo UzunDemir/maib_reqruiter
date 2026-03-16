@@ -114,8 +114,26 @@ def get_translation(key):
 
 
 # --- Stiluri și bara laterală ---
+# --- Stiluri și bara laterală ---
 st.markdown(f"""
     <style>
+        /* 1. ПОЛНОЕ СКРЫТИЕ ХЕДЕРА (кроме стрелки сайдбара) */
+        header div:nth-child(2) {{
+            display: none !important;
+        }}
+        [data-testid="stHeader"] {{
+            background: rgba(0,0,0,0) !important;
+        }}
+        [data-testid="stSidebarCollapseButton"] {{
+            visibility: visible !important;
+        }}
+        
+        /* Убираем лишний отступ сверху, чтобы контент не "висел" */
+        .block-container {{
+            padding-top: 1rem !important;
+        }}
+
+        /* 2. СУЩЕСТВУЮЩИЕ СТИЛИ */
         section[data-testid="stSidebar"] {{
             background-color: #253646 !important;
         }}
@@ -176,6 +194,7 @@ st.markdown(f"""
         <h1>{get_translation('app_title')}</h1>
     </div>
 """, unsafe_allow_html=True)
+
 
 
 # --- Sidebar Content ---
