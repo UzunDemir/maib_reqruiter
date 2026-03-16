@@ -132,28 +132,6 @@ st.markdown(f"""
         #MainMenu, footer {{
             display: none !important;
         }}
-        
-        /* Скрываем элементы справа (share, github и т.д.) */
-        .stApp header [data-testid="stDecoration"] {{
-            display: none !important;
-        }}
-        
-        /* Оставляем header видимым, но скрываем его правую часть */
-        header {{
-            visibility: visible !important;
-            display: block !important;
-            background: transparent !important;
-        }}
-        
-        /* Оставляем только кнопку для боковой панели */
-        header [data-testid="stToolbar"] {{
-            justify-content: flex-start !important;
-        }}
-        
-        /* Скрываем все иконки в тулбаре кроме первой (кнопка боковой панели) */
-        header [data-testid="stToolbar"] button:not(:first-child) {{
-            display: none !important;
-        }}
         .center {{
             display: flex;
             justify-content: center;
