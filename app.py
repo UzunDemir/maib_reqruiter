@@ -17,25 +17,6 @@ from concurrent.futures import ThreadPoolExecutor, as_completed
 
 st.set_page_config(layout="wide", initial_sidebar_state="expanded")
 
-st.markdown("""
-    <style>
-    /* Полностью скрываем правый блок управления (Share, Star, GitHub и т.д.) */
-    header div:nth-child(2) {
-        display: none !important;
-    }
-
-    /* Делаем хедер прозрачным, чтобы не было полос */
-    [data-testid="stHeader"] {
-        background: rgba(0,0,0,0);
-    }
-
-    /* Оставляем стрелку сайдбара видимой */
-    [data-testid="stSidebarCollapseButton"] {
-        visibility: visible !important;
-    }
-    </style>
-""", unsafe_allow_html=True)
-
 
 # --- Language Settings ---
 if 'language' not in st.session_state:
