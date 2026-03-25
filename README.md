@@ -24,25 +24,25 @@
 
 ```
 ┌─────────────────────────────────────────────────────────────────┐
-│                    STREAMLIT FRONTEND                          │
+│                    STREAMLIT FRONTEND                           │
 ├─────────────────────────────────────────────────────────────────┤
-│  Sidebar (Lang / Steps / Vacancies)  │  Main Panel             │
+│  Sidebar (Lang / Steps / Vacancies)  │  Main Panel              │
 ├─────────────────────────────────────────────────────────────────┤
-│                    ORCHESTRATION LAYER                         │
+│                    ORCHESTRATION LAYER                          │
 ├─────────────────────────────────────────────────────────────────┤
-│  ┌──────────┐ ┌──────────┐ ┌──────────┐ ┌──────────┐          │
-│  │ Vacancy  │ │   CV     │ │ Matching │ │Interview │          │
-│  │ Loader   │ │ Processor│ │ Engine   │ │ Manager  │          │
-│  └──────────┘ └──────────┘ └──────────┘ └──────────┘          │
+│  ┌──────────┐ ┌──────────┐ ┌──────────┐ ┌──────────┐            │
+│  │ Vacancy  │ │   CV     │ │ Matching │ │Interview │            │
+│  │ Loader   │ │ Processor│ │ Engine   │ │ Manager  │            │
+│  └──────────┘ └──────────┘ └──────────┘ └──────────┘            │
 ├─────────────────────────────────────────────────────────────────┤
-│                      DEEPSEEK LLM API                          │
-│  • Question generation  • Analysis  • Feedback  • Detection    │
+│                      DEEPSEEK LLM API                           │
+│  • Question generation  • Analysis  • Feedback  • Detection     │
 ├─────────────────────────────────────────────────────────────────┤
 │                    DATA LAYER                                   │
-│  ┌──────────┐ ┌──────────┐ ┌──────────┐ ┌──────────┐          │
-│  │  PDF/    │ │   TF-IDF │ │ Session  │ │   DOCX   │          │
-│  │  DOCX    │ │  Vector  │ │  State   │ │  Export  │          │
-│  └──────────┘ └──────────┘ └──────────┘ └──────────┘          │
+│  ┌──────────┐ ┌──────────┐ ┌──────────┐ ┌──────────┐            │
+│  │  PDF/    │ │   TF-IDF │ │ Session  │ │   DOCX   │            │
+│  │  DOCX    │ │  Vector  │ │  State   │ │  Export  │            │
+│  └──────────┘ └──────────┘ └──────────┘ └──────────┘            │
 └─────────────────────────────────────────────────────────────────┘
 ```
 
