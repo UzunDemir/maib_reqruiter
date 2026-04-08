@@ -1,4 +1,4 @@
-# 🤖 AI HR-Recruiter
+# 🤖 AI HR-Recruiter ([demo](https://maibreqruiter.streamlit.app/))
 
 **Intelligent recruitment system with automated CV analysis, interviews, and candidate evaluation**
 
